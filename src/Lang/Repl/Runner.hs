@@ -27,7 +27,7 @@ runLine rEnv line = do
         Right ast -> do
           when (showAST (replFlags rEnv)) $ liftIO $ printAST ast
           -- Evaluate --
-          let (env2, val) = evalStmt (programEnv rEnv) ast
+          let (env', val) = evalStmt (programEnv rEnv) ast
           liftIO $ putStrLn (show val ++ "\n")
-          return rEnv {programEnv = env2} -- Pass new env to next iteration
+          return rEnv {programEnv = env'} -- Pass new env to next iteration
 

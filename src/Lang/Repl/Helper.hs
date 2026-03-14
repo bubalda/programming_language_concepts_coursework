@@ -38,7 +38,6 @@ wrapSection title content = do
   putStrLn ""
   putStrLn header
   content
-  putStrLn ""
   where
     middle = " " ++ title ++ " "
     padding = headerWidth - length middle

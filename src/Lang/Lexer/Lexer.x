@@ -81,10 +81,10 @@ identTokenize inp@(_, _, _, str) len = stringTokenize (\_ -> identifier (take le
         "true"  -> TokTrue
         "false" -> TokFalse
         "null"  -> TokNull
-        "var"   -> TokVar
+        -- "var"   -> TokVar
         "if"    -> TokIf
         "else"  -> TokElse
-        "func"  -> TokFunc
+        "fun"   -> TokFunc
         s       -> TokIdent s
 
 -- End of program
