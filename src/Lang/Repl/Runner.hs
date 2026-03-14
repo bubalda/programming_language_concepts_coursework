@@ -2,7 +2,8 @@ module Lang.Repl.Runner (runLine) where
 
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
-import Lang.Lexer.Lexer (printTokens, runLexer)
+import Lang.Lexer.Lexer (runLexer)
+import Lang.Lexer.Tokens (printTokens)
 import Lang.Parser.Eval (evalStmt)
 import Lang.Parser.Parser (runParser)
 import Lang.Repl.Env (ReplEnv (flags, programEnv), ReplFlags (showTokens))
@@ -14,17 +15,16 @@ runLine rEnv line = do
   case runLexer line of
     Left err -> do
       liftIO $ putStrLn err -- Lexer error
-      return rEnv -- Retain old env on error
+      return rEnv -- Reprompt a new line with current env
     Right tokens -> do
-      -- Shows tokens
-      -- Hide this on toggle flag :tokens on/off
+      -- Show read tokens. Hide / Display this by setting flag ":tokens on/off"
       when (showTokens (flags rEnv)) $ liftIO $ printTokens tokens
 
       -- Parse --
       case runParser tokens of
         Left err -> do
           liftIO $ putStrLn err -- Parse error
-          return rEnv
+          return rEnv -- Reprompt a new line with current env
         Right stmt -> do
           -- Evaluate --
           let (env2, val) = evalStmt (programEnv rEnv) stmt

@@ -1,12 +1,10 @@
 {
-module Lang.Lexer.Lexer where
-import Lang.Lexer.Tokens
-import Lang.Repl.Helper (wrapSection)
+module Lang.Lexer.Lexer (runLexer) where
+import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
 }
 
--- Monads with {nested comments, indentation level and import lists}
--- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monaduserstate-wrapper
-%wrapper "monadUserState"
+-- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monad-wrapper
+%wrapper "monad"
 
 -- https://haskell-alex.readthedocs.io/en/latest/syntax.html#lexical-syntax
 $digit      = [0-9]
@@ -20,8 +18,23 @@ tokens :-
 
   -- Literals
   $digit+                        { intTokenize TokInt }
-  "true"                         { simpleTokenize TokTrue }
-  "false"                        { simpleTokenize TokFalse }
+
+  -- Special
+  "="                            { simpleTokenize TokAssign }
+  "\\"                           { simpleTokenize TokEscape }
+  "!"                            { simpleTokenize TokNot }
+  "."                            { simpleTokenize TokDot }
+  ","                            { simpleTokenize TokComma }
+  ":"                            { simpleTokenize TokColon }
+  ";"                            { simpleTokenize TokSemiColon }
+
+  -- Brackets
+  "("                            { simpleTokenize TokLParen }
+  ")"                            { simpleTokenize TokRParen }
+  "["                            { simpleTokenize TokLBrack }
+  "]"                            { simpleTokenize TokRBrack }
+  "{"                            { simpleTokenize TokLSQBrack }
+  "}"                            { simpleTokenize TokRSQBrack }
 
   -- Logical Operators
   "=="                           { simpleTokenize TokEQ }
@@ -39,120 +52,65 @@ tokens :-
   "/"                            { simpleTokenize TokDivision }
   "%"                            { simpleTokenize TokModulo }
 
-  -- Special
-  "\\"                           { simpleTokenize TokEscape }
-  "="                            { simpleTokenize TokAssign }
-  "."                            { simpleTokenize TokDot }
-  ","                            { simpleTokenize TokComma }
-  ":"                            { simpleTokenize TokColon }
-  ";"                            { simpleTokenize TokSemiColon }
-
-  -- Brackets
-  "("                            { simpleTokenize TokLParen }
-  ")"                            { simpleTokenize TokRParen }
-  "["                            { simpleTokenize TokLBrack }
-  "]"                            { simpleTokenize TokRBrack }
-  "{"                            { simpleTokenize TokLSQBrack }
-  "}"                            { simpleTokenize TokRSQBrack }
-
-  -- Keyword
-  "var"                          { simpleTokenize TokVar }
-  "if"                           { simpleTokenize TokIf }
-  "else"                         { simpleTokenize TokElse }
-  "fun"                          { simpleTokenize TokFun }
-
-  -- Identifier
-  $alpha [$alpha $digit _]*      { stringTokenize TokIdent }
+  -- Identifier / Keywords (check identTokenize)
+  $alpha [$alpha $digit _]*      { identTokenize }
 
   -- Catch-all Error
   .                              { stringTokenize TokError }
 
 {
+-- Tokenize Keywords and Identifier
+identTokenize :: AlexInput -> Int -> Alex Token
+identTokenize inp@(_, _, _, str) len = stringTokenize (\_ -> identifier (take len str)) inp len
+  where
+    identifier :: String -> TokenType
+    identifier s =
+      case s of
+        "var"   -> TokVar
+        "if"    -> TokIf
+        "else"  -> TokElse
+        "fun"   -> TokFun
+        "true"  -> TokTrue
+        "false" -> TokFalse
+        s       -> TokIdent s
+
 -- End of program
-alexEOF :: Alex TokenType
-alexEOF = return TokEOF
-
--- TODO Touch this on later stages
-data AlexUserState = AlexUserState
-  { lexerCommentDepth  :: Int
-  , lexerStringValue   :: String
-  }
-
-alexInitUserState :: AlexUserState
-alexInitUserState = AlexUserState
-  { lexerCommentDepth  = 0
-  , lexerStringValue   = ""
-  }
+alexEOF :: Alex Token
+alexEOF = return $ Token TokEOF (TokenPos 0 0)
 
 -- Tokenizer
--- For error feedback and slicing purposes
-getTokenSpan :: AlexInput -> Int -> TokenSpan
-getTokenSpan (AlexPn o l c, _, _, _) len = TokenSpan (TokenPos o l c) (TokenPos (o + len) l (c + len))
+getTokenPos :: AlexPosn -> TokenPos
+getTokenPos (AlexPn _ l c) = TokenPos l c
 
 -- Normal tokenize, parses value as string
-tokenize :: (String -> TokenSpan -> TokenType) -> AlexInput -> Int -> Alex TokenType
-tokenize f inp@(_, _, _, str) len = pure $ f (take len str) (getTokenSpan inp len)
+tokenize :: (String -> TokenType) -> AlexInput -> Int -> Alex Token
+tokenize f (pos, _, _, str) len = pure $ Token (f (take len str)) (getTokenPos pos)
 
 -- For simple tokens without values (\_ p helps drop String value provided by tokenize)
-simpleTokenize :: (TokenSpan -> TokenType) -> AlexInput -> Int -> Alex TokenType
-simpleTokenize f = tokenize (\_ p -> f p)
+simpleTokenize :: TokenType -> AlexInput -> Int -> Alex Token
+simpleTokenize tt = tokenize (\_ -> tt)
 
 -- Alias for tokenize, for readability
-stringTokenize :: (String -> TokenSpan -> TokenType) -> AlexInput -> Int -> Alex TokenType
+stringTokenize :: (String -> TokenType) -> AlexInput -> Int -> Alex Token
 stringTokenize = tokenize
 
 -- Returns value as an Int (enforced by type signature)
-intTokenize :: (Int -> TokenSpan -> TokenType) -> AlexInput -> Int -> Alex TokenType
-intTokenize f = tokenize (\s p -> f (read s) p)
+intTokenize :: (Int -> TokenType) -> AlexInput -> Int -> Alex Token
+intTokenize tt = tokenize (\val -> tt (read val))
 
 -- REPL
 -- Generate tokens for parser / debug printer
-runLexer :: String -> Either String [TokenType]
+runLexer :: String -> Either String [Token]
 runLexer input = runAlex input scanTokens
   where
-    scanTokens :: Alex [TokenType]
+    scanTokens :: Alex [Token]
     scanTokens = go
       where
         go = do
           tok <- alexMonadScan
-          case tok of
-            TokEOF -> return [TokEOF]
+          case (tokenType tok) of
+            TokEOF -> return [tok]
             _      -> do
               rest <- go
               return (tok : rest)
-
--- A debug printer
-printTokens :: [TokenType] -> IO ()
-printTokens tokens = do
-  wrapSection "Tokens" (mapM_ printToken tokens)
-  where
-    printToken TokEOF = return () -- Hide TokEOF
-    printToken (TokError s (TokenSpan (TokenPos _ l1 c1) _)) = putStrLn $ "Lexer Error: Could not tokenize string " ++ (show s) ++ " at line " ++ (show l1) ++ " column " ++ (show c1)
-    printToken tok = putStrLn $ "· " ++ (show tok)
 }
-
--- TODO try to remove the need of taking str, do slicing instead
--- Multiblock comments?
-
--- getLexerCommentDepth :: Alex Int
--- getLexerCommentDepth = lexerCommentDepth <$> alexGetUserState
-
--- setLexerCommentDepth :: Int -> Alex ()
--- setLexerCommentDepth ss = do
---   ust <- alexGetUserState
---   alexSetUserState ust{ lexerCommentDepth = ss }
-
--- getLexerStringValue :: Alex String
--- getLexerStringValue = lexerStringValue <$> alexGetUserState
-
--- setLexerStringValue :: String -> Alex ()
--- setLexerStringValue ss = do
---   ust <- alexGetUserState
---   alexSetUserState ust{ lexerStringValue = ss }
-
--- addCharToLexerStringValue :: Char -> Alex ()
--- addCharToLexerStringValue c = do
---   ust <- alexGetUserState
---   alexSetUserState ust{ lexerStringValue = c : lexerStringValue ust } -- Append?
-
--- resetLexerStringValue?
