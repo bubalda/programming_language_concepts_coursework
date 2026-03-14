@@ -1,6 +1,8 @@
 {
-module Lang.Lexer.Lexer (runLexer) where
-import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
+module Lang.Lexer.Lexer (runLexer, printTokens) where
+import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..), formatToken)
+import Lang.Repl.Helper (wrapSection)
+import Text.Printf (printf)
 }
 
 -- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monad-wrapper
@@ -22,21 +24,25 @@ tokens :-
   -- Special
   "="                            { simpleTokenize TokAssign }
   "\\"                           { simpleTokenize TokEscape }
-  "!"                            { simpleTokenize TokNot }
   "."                            { simpleTokenize TokDot }
   ","                            { simpleTokenize TokComma }
-  ":"                            { simpleTokenize TokColon }
+  ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
   ";"                            { simpleTokenize TokSemiColon }
 
   -- Brackets
-  "("                            { simpleTokenize TokLParen }
-  ")"                            { simpleTokenize TokRParen }
-  "["                            { simpleTokenize TokLBrack }
-  "]"                            { simpleTokenize TokRBrack }
-  "{"                            { simpleTokenize TokLSQBrack }
-  "}"                            { simpleTokenize TokRSQBrack }
+  "("                            { simpleTokenize TokLBrack }
+  ")"                            { simpleTokenize TokRBrack }
+  "["                            { simpleTokenize TokLSQBrack }
+  "]"                            { simpleTokenize TokRSQBrack }
+  "{"                            { simpleTokenize TokLCBrack }
+  "}"                            { simpleTokenize TokRCBrack }
 
   -- Logical Operators
+  "!"                            { simpleTokenize TokNot }
+  "&&"                           { simpleTokenize TokAnd }
+  "||"                           { simpleTokenize TokOr }
+
+  -- Comparison Operators
   "=="                           { simpleTokenize TokEQ }
   "!="                           { simpleTokenize TokNEQ }
   "<="                           { simpleTokenize TokLTE }
@@ -45,15 +51,21 @@ tokens :-
   ">"                            { simpleTokenize TokGT }
 
   -- Arithmetic Operators
+  "//"                           { simpleTokenize TokFloorDiv }
+  "**"                           { simpleTokenize TokPower }
   "+"                            { simpleTokenize TokPlus }
   "-"                            { simpleTokenize TokMinus }
   "*"                            { simpleTokenize TokMultiply }
-  "//"                           { simpleTokenize TokFloorDiv }
   "/"                            { simpleTokenize TokDivision }
   "%"                            { simpleTokenize TokModulo }
 
+  -- Binary Operators 
+  "&"                            { simpleTokenize TokBinAnd }
+  "|"                            { simpleTokenize TokBinOr }
+  "^"                            { simpleTokenize TokBinXOR }
+
   -- Identifier / Keywords (check identTokenize)
-  $alpha [$alpha $digit _]*      { identTokenize }
+  [_ $alpha] [$alpha $digit _]*      { identTokenize }
 
   -- Catch-all Error
   .                              { stringTokenize TokError }
@@ -66,12 +78,13 @@ identTokenize inp@(_, _, _, str) len = stringTokenize (\_ -> identifier (take le
     identifier :: String -> TokenType
     identifier s =
       case s of
+        "true"  -> TokTrue
+        "false" -> TokFalse
+        "null"  -> TokNull
         "var"   -> TokVar
         "if"    -> TokIf
         "else"  -> TokElse
-        "fun"   -> TokFun
-        "true"  -> TokTrue
-        "false" -> TokFalse
+        "func"  -> TokFunc
         s       -> TokIdent s
 
 -- End of program
@@ -113,4 +126,16 @@ runLexer input = runAlex input scanTokens
             _      -> do
               rest <- go
               return (tok : rest)
+
+-- Debug printer
+printTokens :: [Token] -> IO ()
+printTokens tokens = do
+  wrapSection "Tokens" (mapM_ printToken tokens)
+  where
+    printToken (Token TokEOF _) = return () -- Hide TokEOF
+    printToken t@(Token (TokError _) _) = putStrLn $ "Lexer Error: Could not tokenize string " ++ formatToken t
+    printToken (Token t _) = putStrLn $ show t
 }
+
+-- concat, += -= *=
+-- string quotes '' "" ``

@@ -6,7 +6,7 @@ import Lang.Parser.Eval (ProgramEnv)
 -- Used by REPL
 data ReplEnv = ReplEnv
   { programEnv :: ProgramEnv,
-    flags :: ReplFlags
+    replFlags :: ReplFlags
   }
 
 data ReplFlags = ReplFlags
@@ -19,7 +19,7 @@ debugRepl :: ReplEnv
 debugRepl =
   ReplEnv
     { programEnv = Map.empty,
-      flags =
+      replFlags =
         ReplFlags
           { showTokens = True,
             showAST = True
@@ -31,7 +31,7 @@ releaseRepl :: ReplEnv
 releaseRepl =
   ReplEnv
     { programEnv = Map.empty,
-      flags =
+      replFlags =
         ReplFlags
           { showTokens = False,
             showAST = False

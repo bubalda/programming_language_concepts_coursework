@@ -1,48 +1,63 @@
 {
-module Lang.Parser.Parser where
-import Lang.Lexer.Tokens (TokenType(..), Token(..), formatToken, formatTokenType)
+module Lang.Parser.Parser (runParser, printAST) where
+import Lang.Lexer.Tokens (TokenType(..), Token(..), formatToken)
 import Lang.Parser.Eval (Expr(..), Stmt(..), evalExpr, evalStmt)
+import Lang.Repl.Helper (wrapSection)
 }
 
-%name parseStmt
+%name parse
 %tokentype { Token }
 %monad { Either String } { >>= } { return }
 %error { parseError }
 
 %token
-    ident                          { Token (TokIdent $$)      _ }
-    int                            { Token (TokInt $$)        _ }
-    'true'                         { Token TokTrue            _ }
-    'false'                        { Token TokFalse           _ }
-    '<'                            { Token TokLT              _ }
-    '<='                           { Token TokLTE             _ }
-    '>'                            { Token TokGT              _ }
-    '>='                           { Token TokGTE             _ }
-    '=='                           { Token TokEQ              _ }
-    '!='                           { Token TokNEQ             _ }
-    '+'                            { Token TokPlus            _ }
-    '-'                            { Token TokMinus           _ }
-    '*'                            { Token TokMultiply        _ }
-    '/'                            { Token TokDivision        _ }
-    '//'                           { Token TokFloorDiv        _ }
-    '%'                            { Token TokModulo          _ }
-    '='                            { Token TokAssign          _ }
-    '\\'                           { Token TokEscape          _ }
-    '!'                            { Token TokNot             _ }
-    '.'                            { Token TokDot             _ }
-    ','                            { Token TokComma           _ }
-    ':'                            { Token TokColon           _ }
-    ';'                            { Token TokSemiColon       _ }
-    '('                            { Token TokLParen          _ }
-    ')'                            { Token TokRParen          _ }
-    '['                            { Token TokLBrack          _ }
-    ']'                            { Token TokRBrack          _ }
-    '{'                            { Token TokLSQBrack        _ }
-    '}'                            { Token TokRSQBrack        _ }
-    'var'                          { Token TokVar             _ }
-    'if'                           { Token TokIf              _ }
-    'else'                         { Token TokElse            _ }
-    'fun'                          { Token TokFun             _ }
+  int                            { Token (TokInt $$)        _ }
+  ident                          { Token (TokIdent $$)      _ }
+  'true'                         { Token TokTrue            _ }
+  'false'                        { Token TokFalse           _ }
+  'null'                         { Token TokNull            _ }
+  
+  '='                            { Token TokAssign          _ }
+  '\\'                           { Token TokEscape          _ }
+  '.'                            { Token TokDot             _ }
+  ','                            { Token TokComma           _ }
+  ':'                            { Token TokColon           _ }
+  ';'                            { Token TokSemiColon       _ }
+
+  '('                            { Token TokLBrack          _ }
+  ')'                            { Token TokRBrack          _ }
+  '['                            { Token TokLSQBrack        _ }
+  ']'                            { Token TokRSQBrack        _ }
+  '{'                            { Token TokLCBrack         _ }
+  '}'                            { Token TokRCBrack         _ }
+
+  '!'                            { Token TokNot             _ }
+  '&&'                           { Token TokAnd             _ }
+  '||'                           { Token TokOr              _ }
+
+  '=='                           { Token TokEQ              _ }
+  '!='                           { Token TokNEQ             _ }
+  '<='                           { Token TokLTE             _ }
+  '<'                            { Token TokLT              _ }
+  '>='                           { Token TokGTE             _ }
+  '>'                            { Token TokGT              _ }
+
+  '//'                           { Token TokFloorDiv        _ }
+  '**'                           { Token TokPower           _ }
+  '+'                            { Token TokPlus            _ }
+  '-'                            { Token TokMinus           _ }
+  '*'                            { Token TokMultiply        _ }
+  '/'                            { Token TokDivision        _ }
+  '%'                            { Token TokModulo          _ }
+
+  '&'                            { Token TokBinAnd          _ }
+  '|'                            { Token TokBinOr           _ }
+  '^'                            { Token TokBinXOR          _ }
+
+  'var'                          { Token TokVar             _ }
+  'if'                           { Token TokIf              _ }
+  'else'                         { Token TokElse            _ }
+  'func'                         { Token TokFunc            _ }
 
 %left '+' '-'
 %left '*' '/'
@@ -54,27 +69,30 @@ Stmt
   | Expr              { ExprStmt $1 }
   
 Expr
-    : Expr '+' Expr   { Add $1 $3 }
-    | Expr '-' Expr   { Sub $1 $3 }
-    | Expr '*' Expr   { Mul $1 $3 }
-    | Expr '/' Expr   { Div $1 $3 }
-    | '(' Expr ')'    { $2 }
-    | int             { IntLit $1 }
-    | ident           { Var $1 }
+  : Expr '+' Expr   { Add $1 $3 }
+  | Expr '-' Expr   { Sub $1 $3 }
+  | Expr '*' Expr   { Mul $1 $3 }
+  | Expr '/' Expr   { Div $1 $3 }
+  | '(' Expr ')'    { $2 }
+  | int             { IntLit $1 }
+  | ident           { Var $1 }
 
 
 {
-parserIgnore :: TokenType -> Bool
-parserIgnore TokEOF         = True
-parserIgnore (TokError _) = True
-parserIgnore _              = False
-
 parseError :: [Token] -> Either String a
 parseError [] = Left "No tokens to parse"
 parseError toks =
-    Left $ "Parse error at token: " ++ formatToken (head toks)                         -- Show error parsing
-    ++ ".\nFor context: " ++ unwords (map (formatTokenType . tokenType) (take 5 toks)) -- Help navigate to code part 
+    Left $ "Parse error at token: " ++ formatToken (head toks)              -- Show error parsing
+    ++ ".\nFor context: " ++ unwords (map (show . tokenType) (take 5 toks)) -- Help navigate to code part 
     
 runParser :: [Token] -> Either String Stmt
-runParser toks = parseStmt (filter (not . parserIgnore . tokenType) toks)
+runParser toks = parse (filter (not . parserIgnore . tokenType) toks)
+  where
+    parserIgnore :: TokenType -> Bool
+    parserIgnore TokEOF         = True
+    parserIgnore (TokError _)   = True
+    parserIgnore _              = False
+
+printAST :: Stmt -> IO ()
+printAST ast = wrapSection "Abstract Syntax Tree (AST)" (putStrLn (show ast))
 }
