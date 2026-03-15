@@ -60,9 +60,11 @@ tokens :-
   "%"                            { simpleTokenize TokModulo }
 
   -- Binary Operators 
-  "&"                            { simpleTokenize TokBinAnd }
-  "|"                            { simpleTokenize TokBinOr }
+  "&"                            { simpleTokenize TokBinAND }
+  "|"                            { simpleTokenize TokBinOR }
   "^"                            { simpleTokenize TokBinXOR }
+  "<<"                           { simpleTokenize TokBinLShift }
+  ">>"                           { simpleTokenize TokBinRShift }
 
   -- Identifier / Keywords (check identTokenize)
   [_ $alpha] [$alpha $digit _]*      { identTokenize }
@@ -136,6 +138,3 @@ printTokens tokens = do
     printToken t@(Token (TokError _) _) = putStrLn $ "Lexer Error: Could not tokenize string " ++ formatToken t
     printToken (Token t _) = putStrLn $ show t
 }
-
--- concat, += -= *=
--- string quotes '' "" ``

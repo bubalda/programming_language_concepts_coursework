@@ -51,9 +51,11 @@ import Lang.Repl.Helper (wrapSection)
   '/'                            { Token TokDivision        _ }
   '%'                            { Token TokModulo          _ }
 
-  '&'                            { Token TokBinAnd          _ }
-  '|'                            { Token TokBinOr           _ }
+  '&'                            { Token TokBinAND          _ }
+  '|'                            { Token TokBinOR           _ }
   '^'                            { Token TokBinXOR          _ }
+  '<<'                           { Token TokBinLShift       _ }
+  '>>'                           { Token TokBinRShift       _ }
 
   -- 'var'                          { Token TokVar             _ }
   'if'                           { Token TokIf              _ }
@@ -61,8 +63,8 @@ import Lang.Repl.Helper (wrapSection)
   'fun'                          { Token TokFunc            _ }
 
 
--- https://haskell-happy.readthedocs.io/en/latest/using.html#using-precedences
 -- https://en.cppreference.com/w/c/language/operator_precedence.html
+-- https://haskell-happy.readthedocs.io/en/latest/using.html#context-dependent-precedence
 -- This declares both association and precedence so no need to declare multiple exprs for (+ -) < (* /)
 %left '||'
 %left '&&'
@@ -71,6 +73,7 @@ import Lang.Repl.Helper (wrapSection)
 %left '&'
 %left '==' '!='
 %left '<' '<=' '>' '>='           -- 3 < n < 5 => (3 < n) < 5
+%left '<<' '>>'
 %left '+' '-'                     -- 3 + 4 > 5 => (3 + 4) > 5
 %left '*' '**' '/' '//' '%'       -- 3 + 4 * 5 => 3 + (4 * 5)
 %right NOT
@@ -79,35 +82,39 @@ import Lang.Repl.Helper (wrapSection)
 
 %%
 
--- https://haskell-happy.readthedocs.io/en/latest/using.html#context-dependent-precedence
 Stmt
   : ident '=' Expr          { Assign $1 $3 }
   | Expr                    { ExprStmt $1 }
 
 Expr
-  : Expr '&' Expr           { BinAnd $1 $3 }
-  | Expr '^' Expr           { BinXor $1 $3 }
-  | Expr '|' Expr           { BinOr  $1 $3 }
+  : Expr '||' Expr          { Or $1 $3 }
+  | Expr '&&' Expr          { And $1 $3 }
+
+  | Expr '|' Expr           { BinOR  $1 $3 }
+  | Expr '^' Expr           { BinXOR $1 $3 }
+  | Expr '&' Expr           { BinAND $1 $3 }
   
   | Expr '==' Expr          { Eq $1 $3 }
   | Expr '!=' Expr          { Neq $1 $3 }
+
   | Expr '<' Expr           { Lt $1 $3 }
   | Expr '<=' Expr          { Lte $1 $3 }
   | Expr '>' Expr           { Gt $1 $3 }
   | Expr '>=' Expr          { Gte $1 $3 }
 
-  | Expr '+' Expr           { Add $1 $3 }
-  | Expr '-' Expr           { Sub $1 $3 }
   | Expr '*' Expr           { Mul $1 $3 }
   | Expr '/' Expr           { Div $1 $3 }
   | Expr '%' Expr           { Mod $1 $3 }
   | Expr '**' Expr          { Pow $1 $3 }
   | Expr '//' Expr          { FloorDiv $1 $3 }
 
-  | Expr '&&' Expr          { And $1 $3 }
-  | Expr '||' Expr          { Or $1 $3 }
-  | '!' Expr %prec NOT      { Not $2 }
+  | Expr '<<' Expr          { BinLShift $1 $3 }
+  | Expr '>>' Expr          { BinRShift $1 $3 }
 
+  | Expr '+' Expr           { Add $1 $3 }
+  | Expr '-' Expr           { Sub $1 $3 }
+
+  | '!' Expr %prec NOT      { Not $2 }
   | '(' Expr ')'            { Brack $2 }
   | '-' Expr %prec NEG      { Negate $2 }
 

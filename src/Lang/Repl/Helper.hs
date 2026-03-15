@@ -5,11 +5,14 @@ module Lang.Repl.Helper
     isBlankLine,
     wrapSection,
     uppercase,
+    putStrLnRepl,
   )
 where
 
 import System.Exit (exitSuccess)
 import Data.Char (toUpper)
+import Control.Monad.IO.Class (liftIO)
+import System.Console.Haskeline (InputT)
 
 -- Repl Prints and Checks
 replWelcome :: IO ()
@@ -23,6 +26,9 @@ replEOFExit = putStrLn "Received EOF, leaving C2Repl." >> exitSuccess
 
 isBlankLine :: (Foldable t) => t Char -> Bool
 isBlankLine line = all (`elem` " \t\n\r") line
+
+putStrLnRepl :: String -> InputT IO ()
+putStrLnRepl = liftIO . putStrLn
 
 -- Pretty Print
 -- The title bar length

@@ -1,7 +1,8 @@
-module Lang.Parser.Eval (ProgramEnv, Expr (..), Stmt (..), evalExpr, evalStmt) where
+module Lang.Parser.Eval (ProgramEnv, Expr (..), Stmt (..), evalExpr, evalStmt, printEval, printEvalPretty) where
 
 import qualified Data.Map as Map
-import Data.Bits (Bits(xor), (.|.), (.&.))
+import Data.Bits (Bits(xor, shiftL, shiftR), (.|.), (.&.))
+import Lang.Repl.Helper (wrapSection)
 
 type ProgramEnv = Map.Map String Value
 
@@ -10,7 +11,7 @@ data Expr
   | IntLit Int | BoolLit Bool | NullLit
   | Add Expr Expr | Sub Expr Expr | Mul Expr Expr | Div Expr Expr | Mod Expr Expr | Pow Expr Expr | FloorDiv Expr Expr
   | Negate Expr | Brack Expr
-  | BinAnd Expr Expr | BinXor Expr Expr | BinOr Expr Expr
+  | BinAND Expr Expr | BinOR Expr Expr | BinXOR Expr Expr | BinLShift Expr Expr | BinRShift Expr Expr
   | Eq Expr Expr | Neq Expr Expr | Lte Expr Expr | Lt Expr Expr | Gte Expr Expr | Gt Expr Expr
   | And Expr Expr | Or Expr Expr | Not Expr 
   deriving (Show)
@@ -24,7 +25,7 @@ data Value
   = VInt Int
   | VBool Bool
   | VNull
-  | VError
+  | VError String
   deriving (Show, Eq)
 
 evalExpr :: ProgramEnv -> Expr -> Value
@@ -41,7 +42,7 @@ evalExpr env expr =
     Add a b       -> VInt $ eInt a + eInt b
     Sub a b       -> VInt $ eInt a - eInt b
     Mul a b       -> VInt $ eInt a * eInt b
-    Div a b       -> VInt $ eInt a `div` eInt b -- TODO: Introduce float
+    Div a b       -> VInt $ eInt a `div` eInt b
     Mod a b       -> VInt $ eInt a `mod` eInt b
     Pow a b       -> VInt $ eInt a ^ eInt b
     FloorDiv a b  -> VInt $ eInt a `div` eInt b
@@ -70,10 +71,11 @@ evalExpr env expr =
       
     Not a -> VBool (not (eBool a))
 
-    BinAnd a b -> VInt (eInt a .&. eInt b)
-    BinXor a b -> VInt (eInt a .|. eInt b)
-    BinOr a b -> VInt (xor (eInt a) (eInt b))
-
+    BinAND a b    -> VInt (eInt a .&. eInt b)
+    BinOR a b     -> VInt (eInt a .|. eInt b)
+    BinXOR a b    -> VInt (eInt a `xor` eInt b)
+    BinLShift a b -> VInt (eInt a `shiftL` eInt b) 
+    BinRShift a b -> VInt (eInt a `shiftR` eInt b)
     where
       -- Inner helper
       eval :: Expr -> Value
@@ -101,26 +103,26 @@ evalExpr env expr =
             (VNull) -> "null"
             (VInt _) -> "integer"
             (VBool _) -> "boolean"
-            (VError) -> "error"
+            (VError _) -> "error"
         in
-          "Expected `" ++ text expectedVal ++ "` object, got " ++ show inputVal ++ " instead."
+          "Expected type `" ++ text expectedVal ++ "` object, got type `" ++ text inputVal ++ "` instead."
 
-
-
-evalStmt :: ProgramEnv -> Stmt -> (ProgramEnv, Value)
+evalStmt :: ProgramEnv -> Stmt -> Either String (ProgramEnv, Value)
 evalStmt env stmt =
   case stmt of
     ExprStmt e ->
-      (env, evalExpr env e)
+      Right (env, evalExpr env e)
     Assign name expr ->
       let val = evalExpr env expr
           env' = Map.insert name val env
-       in (env', val)
+       in Right (env', val)
 
 
+printEval :: Value -> IO ()
+printEval (VBool b) = putStrLn (show b)
+printEval (VInt i) = putStrLn (show i)
+printEval (VNull) = putStrLn "null"
+printEval (VError e) = putStrLn e
 
-
-  -- true ^ false?
-  -- catch all err?
-  -- bitshift << >>
-  -- loops
+printEvalPretty :: Value -> IO ()
+printEvalPretty val = wrapSection "Evaluation Result" (printEval val)

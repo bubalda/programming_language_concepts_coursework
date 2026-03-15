@@ -28,7 +28,7 @@ data TokenType
   | TokNot | TokAnd | TokOr
   | TokEQ | TokNEQ | TokLTE | TokLT | TokGTE | TokGT
   | TokFloorDiv | TokPower | TokPlus | TokMinus | TokMultiply | TokDivision | TokModulo 
-  | TokBinAnd | TokBinOr | TokBinXOR
+  | TokBinAND | TokBinOR | TokBinXOR | TokBinLShift | TokBinRShift
   -- | TokVar
   | TokIf
   | TokElse

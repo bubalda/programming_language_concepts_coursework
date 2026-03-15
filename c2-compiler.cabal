@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      CLI.Args
       Lang.Lexer.Lexer
       Lang.Lexer.Tokens
       Lang.Parser.Eval

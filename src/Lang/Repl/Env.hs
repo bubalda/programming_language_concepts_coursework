@@ -1,6 +1,5 @@
-module Lang.Repl.Env (ReplEnv (..), ReplFlags (..), debugRepl, releaseRepl) where
+module Lang.Repl.Env (ReplEnv (..), ReplFlags (..), debugFlags, releaseFlags) where
 
-import qualified Data.Map as Map
 import Lang.Parser.Eval (ProgramEnv)
 
 -- Used by REPL
@@ -10,30 +9,28 @@ data ReplEnv = ReplEnv
   }
 
 data ReplFlags = ReplFlags
-  { showTokens :: Bool,
-    showAST :: Bool
+  { debug :: Bool,
+    showTokens :: Bool,
+    showAST :: Bool,
+    prettyEval :: Bool
   }
 
 -- Settings used for debugging
-debugRepl :: ReplEnv
-debugRepl =
-  ReplEnv
-    { programEnv = Map.empty,
-      replFlags =
-        ReplFlags
-          { showTokens = True,
-            showAST = True
-          }
+debugFlags :: ReplFlags
+debugFlags =
+  ReplFlags
+    { debug = True,
+      showTokens = True,
+      showAST = True,
+      prettyEval = True
     }
 
 -- Settings used for release
-releaseRepl :: ReplEnv
-releaseRepl =
-  ReplEnv
-    { programEnv = Map.empty,
-      replFlags =
-        ReplFlags
-          { showTokens = False,
-            showAST = False
-          }
+releaseFlags :: ReplFlags
+releaseFlags =
+  ReplFlags
+    { debug = False,
+      showTokens = False,
+      showAST = False,
+      prettyEval = False
     }
