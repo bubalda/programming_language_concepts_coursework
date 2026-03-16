@@ -6,6 +6,7 @@ module Lang.Repl.Helper
     wrapSection,
     uppercase,
     putStrLnRepl,
+    removeStartEnd,
   )
 where
 
@@ -38,7 +39,6 @@ headerWidth = 120
 duplicate :: String -> Int -> String
 duplicate s n = concat (replicate n s)
 
-
 wrapSection :: String -> IO () -> IO ()
 wrapSection title content = do
   putStrLn ""
@@ -54,3 +54,10 @@ wrapSection title content = do
 
 uppercase :: String -> String
 uppercase = map toUpper
+
+-- Used for len > 2 strings
+-- Unless alex has bugs and could not lex '...' / "..."
+-- Otherwise the risks of error are VERY low
+removeStartEnd :: String -> String
+removeStartEnd x | length x < 3 = error "Length of string " ++ x ++ " must be greater than 2."
+removeStartEnd x = (drop 1 . init) x

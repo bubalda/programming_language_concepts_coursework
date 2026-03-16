@@ -2,8 +2,9 @@ module Lang.Repl.Runner (runLine) where
 
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
+import Lang.Eval.Eval (evalStmt, runEval)
+import Lang.Eval.Print (printEval, printEvalPretty)
 import Lang.Lexer.Lexer (printTokens, runLexer)
-import Lang.Parser.Eval (evalStmt, printEval, printEvalPretty)
 import Lang.Parser.Parser (printAST, runParser)
 import Lang.Repl.Env (ReplEnv (programEnv, replFlags), ReplFlags (..))
 import Lang.Repl.Helper (putStrLnRepl)
@@ -25,7 +26,7 @@ runLine rEnv line = do
           when ((showAST . replFlags) rEnv) $ liftIO $ printAST ast
 
           -- Evaluate --
-          case evalStmt (programEnv rEnv) ast of
+          case runEval (evalStmt (programEnv rEnv) ast) of
             Left err -> errReturn err rEnv -- Evaluator error
             Right (env', val) -> do
               if (prettyEval . replFlags) rEnv

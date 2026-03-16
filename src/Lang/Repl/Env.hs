@@ -1,6 +1,6 @@
 module Lang.Repl.Env (ReplEnv (..), ReplFlags (..), debugFlags, releaseFlags) where
 
-import Lang.Parser.Eval (ProgramEnv)
+import Lang.Eval.Types (ProgramEnv)
 
 -- Used by REPL
 data ReplEnv = ReplEnv
@@ -9,7 +9,7 @@ data ReplEnv = ReplEnv
   }
 
 data ReplFlags = ReplFlags
-  { debug :: Bool,
+  { debugMode :: Bool,
     showTokens :: Bool,
     showAST :: Bool,
     prettyEval :: Bool
@@ -19,7 +19,7 @@ data ReplFlags = ReplFlags
 debugFlags :: ReplFlags
 debugFlags =
   ReplFlags
-    { debug = True,
+    { debugMode = True,
       showTokens = True,
       showAST = True,
       prettyEval = True
@@ -29,7 +29,7 @@ debugFlags =
 releaseFlags :: ReplFlags
 releaseFlags =
   ReplFlags
-    { debug = False,
+    { debugMode = False,
       showTokens = False,
       showAST = False,
       prettyEval = False

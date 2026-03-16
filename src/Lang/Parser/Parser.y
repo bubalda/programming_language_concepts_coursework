@@ -2,7 +2,7 @@
 {
 module Lang.Parser.Parser (runParser, printAST) where
 import Lang.Lexer.Tokens (TokenType(..), Token(..), formatToken)
-import Lang.Parser.Eval (Expr(..), Stmt(..), evalExpr, evalStmt)
+import Lang.Eval.Types (Expr(..), Stmt(..))
 import Lang.Repl.Helper (wrapSection)
 }
 
@@ -13,10 +13,13 @@ import Lang.Repl.Helper (wrapSection)
 
 %token
   int                            { Token (TokInt $$)        _ }
-  ident                          { Token (TokIdent $$)      _ }
-  'true'                         { Token TokTrue            _ }
-  'false'                        { Token TokFalse           _ }
+  char                           { Token (TokChar $$)       _ }
+  bool                           { Token (TokBool $$)       _ }
+  double                         { Token (TokDouble $$)     _ }
+  string                         { Token (TokString $$)     _ }
   'null'                         { Token TokNull            _ }
+  
+  ident                          { Token (TokIdent $$)      _ }
   
   '='                            { Token TokAssign          _ }
   '\\'                           { Token TokEscape          _ }
@@ -57,9 +60,14 @@ import Lang.Repl.Helper (wrapSection)
   '<<'                           { Token TokBinLShift       _ }
   '>>'                           { Token TokBinRShift       _ }
 
-  -- 'var'                          { Token TokVar             _ }
+  type                           { Token (TokType $$)       _ }
+
   'if'                           { Token TokIf              _ }
   'else'                         { Token TokElse            _ }
+
+  'for'                          { Token TokFor             _ }
+  'while'                        { Token TokWhile           _ }
+  
   'fun'                          { Token TokFunc            _ }
 
 
@@ -119,19 +127,20 @@ Expr
   | '-' Expr %prec NEG      { Negate $2 }
 
   | 'null'                  { NullLit }
-  | 'true'                  { BoolLit True }
-  | 'false'                 { BoolLit False }
   | int                     { IntLit $1 }
+  | char                    { CharLit $1 }
+  | bool                    { BoolLit $1 }
+  | double                  { DoubleLit $1 }
+  | string                  { StringLit $1 }
+
   | ident                   { Var $1 }
 
 
 {
+-- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
-parseError [] = Left "No tokens to parse"             -- Should be handled by REPL (ignore and reprompt)
-parseError (t:toks) =
-    Left $ "Parse error at token: " ++ formatToken t  -- Show error when parsing, check if you initialized it in the parser
-    ++ ".\nFor context, the next few tokens are: " 
-    ++ unwords (map (show . tokenType) (take 5 toks)) -- Help navigate to part of code 
+parseError [] = Left "Parse error"                    -- Should be handled by REPL (ignore and reprompt) (test "1 +")
+parseError (t:_) =Left $ "Parse error at token: " ++ formatToken t  
     
 runParser :: [Token] -> Either String Stmt
 runParser toks = parse (filter (not . parserIgnore . tokenType) toks)

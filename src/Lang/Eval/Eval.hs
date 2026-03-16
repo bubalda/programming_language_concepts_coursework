@@ -1,0 +1,116 @@
+module Lang.Eval.Eval (evalExpr, evalStmt, runEval) where
+
+import Control.Monad.Except (runExceptT, throwError)
+import Data.Bits (Bits (shiftL, shiftR, xor), (.&.), (.|.))
+import Data.Functor.Identity (Identity (runIdentity))
+import qualified Data.Map as Map
+import Lang.Eval.Types (EvalM, Expr(..), ProgramEnv, Stmt(..), Value(..))
+import Lang.Eval.Errors (expectVInt, expectVBool)
+
+-- TODO Pending improvements to make
+runEval :: EvalM a -> Either String a
+runEval ev = runIdentity (runExceptT ev)
+
+evalStmt :: ProgramEnv -> Stmt -> EvalM (ProgramEnv, Value)
+evalStmt env stmt =
+  case stmt of
+    ExprStmt e -> do
+      val <- evalExpr env e
+      return (env, val)
+    Assign name expr -> do
+      val <- evalExpr env expr
+      let env' = Map.insert name val env
+      return (env', val)
+
+evalExpr :: ProgramEnv -> Expr -> EvalM Value
+evalExpr env expr =
+  case expr of
+    IntLit n -> return $ VInt n
+    CharLit n -> return $ VChar n
+    BoolLit n -> return $ VBool n
+    DoubleLit n -> return $ VDouble n
+    StringLit n -> return $ VString n
+    NullLit -> return VNull
+    Var v ->
+      case Map.lookup v env of
+        Just val -> return val
+        Nothing -> throwError ("Undefined identifier: " ++ v)
+
+    Brack a -> eval a
+
+    Add a b -> arithOpInt (+) a b
+    Sub a b -> arithOpInt (-) a b
+    Mul a b -> arithOpInt (*) a b
+    Div a b -> arithOpInt div a b
+    Mod a b -> arithOpInt mod a b
+    Pow a b -> arithOpInt (^) a b
+    FloorDiv a b -> arithOpInt div a b
+
+    Negate a -> do
+      x <- eInt a
+      return $ VInt (-x)
+
+    Eq a b -> do
+      va <- eval a
+      vb <- eval b
+      return $ VBool (va == vb)
+
+    Neq a b -> do
+      va <- eval a
+      vb <- eval b
+      return $ VBool (va /= vb)
+
+    Lte a b -> cmpOpInt (<=) a b
+    Lt a b -> cmpOpInt (<) a b
+    Gte a b -> cmpOpInt (>=) a b
+    Gt a b -> cmpOpInt (>) a b
+
+    BinAND a b -> bitOp (.&.) a b
+    BinOR a b -> bitOp (.|.) a b
+    BinXOR a b -> bitOp xor a b
+    BinLShift a b -> bitOp shiftL a b
+    BinRShift a b -> bitOp shiftR a b
+
+    -- Lazy evaluation of and / or
+    And a b -> do
+      va <- eBool a
+      case va of
+        False -> return $ VBool False
+        True -> do
+          vb <- eBool b
+          case vb of
+            vb -> return $ VBool vb
+
+    Or a b -> do
+      va <- eBool a
+      case va of
+        True -> return $ VBool True
+        False -> do
+          vb <- eBool b
+          case vb of
+            vb -> return $ VBool vb
+
+    Not a -> do
+      va <- eBool a
+      return $ VBool (not (va))
+
+  where
+    -- Shortcut Helpers
+    arithOpInt f a b = do
+      x <- eInt a
+      y <- eInt b
+      return $ VInt (f x y)
+
+    cmpOpInt f a b = do
+      x <- eInt a
+      y <- eInt b
+      return $ VBool (f x y)
+
+    bitOp f a b = do
+      x <- eInt a
+      y <- eInt b
+      return $ VInt (f x y)
+
+    eval = evalExpr env
+    eInt e = eval e >>= expectVInt
+    eBool e = eval e >>= expectVBool

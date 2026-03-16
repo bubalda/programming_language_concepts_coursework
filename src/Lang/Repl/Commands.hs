@@ -18,7 +18,7 @@ handleCommand loop rEnv line = do
   case words line of
     [":?"] -> liftIO displayHelp >> loop rEnv
     [":q"] -> liftIO exitSuccess
-    [":debug"] -> showFlag (\f -> debug f) "Debug Mode" loop rEnv
+    [":debug"] -> showFlag (\f -> debugMode f) "Debug Mode" loop rEnv
     [":debug", val] -> setFlag (\_ b -> if b then debugFlags else releaseFlags) "Debug Mode" val loop rEnv
     [":tokens"] -> showFlag (\f -> showTokens f) "Show Tokens" loop rEnv
     [":tokens", val] -> setFlag (\f b -> f {showTokens = b}) "Show Tokens" val loop rEnv

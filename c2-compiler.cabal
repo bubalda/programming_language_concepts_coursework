@@ -26,9 +26,12 @@ source-repository head
 library
   exposed-modules:
       CLI.Args
+      Lang.Eval.Errors
+      Lang.Eval.Eval
+      Lang.Eval.Print
+      Lang.Eval.Types
       Lang.Lexer.Lexer
       Lang.Lexer.Tokens
-      Lang.Parser.Eval
       Lang.Parser.Parser
       Lang.Repl.Commands
       Lang.Repl.Env
@@ -50,6 +53,7 @@ library
     , base
     , containers
     , haskeline
+    , mtl
   default-language: Haskell2010
 
 executable c2-compiler-exe
@@ -67,6 +71,7 @@ executable c2-compiler-exe
     , c2-compiler
     , containers
     , haskeline
+    , mtl
   default-language: Haskell2010
 
 test-suite c2-compiler-test
@@ -85,4 +90,5 @@ test-suite c2-compiler-test
     , c2-compiler
     , containers
     , haskeline
+    , mtl
   default-language: Haskell2010

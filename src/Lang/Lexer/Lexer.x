@@ -1,7 +1,7 @@
 {
 module Lang.Lexer.Lexer (runLexer, printTokens) where
 import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..), formatToken)
-import Lang.Repl.Helper (wrapSection)
+import Lang.Repl.Helper (wrapSection, removeStartEnd)
 import Text.Printf (printf)
 }
 
@@ -9,8 +9,10 @@ import Text.Printf (printf)
 %wrapper "monad"
 
 -- https://haskell-alex.readthedocs.io/en/latest/syntax.html#lexical-syntax
-$digit      = [0-9]
-$alpha      = [a-zA-Z]
+$digit       = [0-9]
+$alpha       = [a-zA-Z]
+$char        = [^\'\\\n]
+$stringChar  = [^\"\\\n]
 
 -- Token matches by (Top-Down) (Long-Short)
 tokens :-
@@ -19,7 +21,9 @@ tokens :-
   "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
 
   -- Literals
-  $digit+                        { intTokenize TokInt }
+  $digit+                        { valueTokenize TokInt }
+  \'($char|\\.)\'                { valueTokenize TokChar }
+  \"($stringChar|\\.)*\"         { valueTokenize TokString }
 
   -- Special
   "="                            { simpleTokenize TokAssign }
@@ -67,26 +71,36 @@ tokens :-
   ">>"                           { simpleTokenize TokBinRShift }
 
   -- Identifier / Keywords (check identTokenize)
-  [_ $alpha] [$alpha $digit _]*      { identTokenize }
+  [_ $alpha] [$alpha $digit _]*  { identTokenize }
 
   -- Catch-all Error
-  .                              { stringTokenize TokError }
+  .                              { tokenize TokError }
 
 {
 -- Tokenize Keywords and Identifier
 identTokenize :: AlexInput -> Int -> Alex Token
-identTokenize inp@(_, _, _, str) len = stringTokenize (\_ -> identifier (take len str)) inp len
+identTokenize inp@(_, _, _, str) len = tokenize (\_ -> identifier (take len str)) inp len
   where
     identifier :: String -> TokenType
     identifier s =
       case s of
-        "true"  -> TokTrue
-        "false" -> TokFalse
+        "true"  -> TokBool True
+        "false" -> TokBool False
         "null"  -> TokNull
-        -- "var"   -> TokVar
+
         "if"    -> TokIf
         "else"  -> TokElse
+
+        "for"   -> TokFor
+        "while" -> TokWhile
+
         "fun"   -> TokFunc
+
+        "char"  -> TokType s
+        "int"   -> TokType s
+        "bool"  -> TokType s
+        "double"-> TokType s
+
         s       -> TokIdent s
 
 -- End of program
@@ -99,19 +113,15 @@ getTokenPos (AlexPn _ l c) = TokenPos l c
 
 -- Normal tokenize, parses value as string
 tokenize :: (String -> TokenType) -> AlexInput -> Int -> Alex Token
-tokenize f (pos, _, _, str) len = pure $ Token (f (take len str)) (getTokenPos pos)
+tokenize tt (pos, _, _, str) len = pure $ Token (tt (take len str)) (getTokenPos pos)
 
 -- For simple tokens without values (\_ p helps drop String value provided by tokenize)
 simpleTokenize :: TokenType -> AlexInput -> Int -> Alex Token
-simpleTokenize tt = tokenize (\_ -> tt)
-
--- Alias for tokenize, for readability
-stringTokenize :: (String -> TokenType) -> AlexInput -> Int -> Alex Token
-stringTokenize = tokenize
+simpleTokenize tt = tokenize (const tt)
 
 -- Returns value as an Int (enforced by type signature)
-intTokenize :: (Int -> TokenType) -> AlexInput -> Int -> Alex Token
-intTokenize tt = tokenize (\val -> tt (read val))
+valueTokenize :: Read a => (a -> TokenType) -> AlexInput -> Int -> Alex Token
+valueTokenize tt = tokenize (tt . read)
 
 -- REPL
 -- Generate tokens for parser / debug printer

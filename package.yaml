@@ -24,6 +24,7 @@ dependencies:
 - array
 - containers
 - haskeline
+- mtl
 
 ghc-options:
 - -Wall
@@ -49,6 +50,7 @@ library:
   - array
   - containers
   - haskeline
+  - mtl
   
 executables:
   c2-compiler-exe:
