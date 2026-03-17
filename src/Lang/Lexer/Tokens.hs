@@ -2,13 +2,12 @@ module Lang.Lexer.Tokens
   ( TokenPos (..),
     TokenType (..),
     Token (..),
-    formatToken
   )
 where
 
 data Token = Token
   { tokenType :: TokenType, -- For differenciating tokens
-    tokenPos :: TokenPos -- For error feedback
+    tokenPos :: TokenPos    -- For error feedback
   }
   deriving (Show, Eq)
 
@@ -29,7 +28,7 @@ data TokenType
   | TokDouble Double | TokString String
 
   -- Special characters
-  | TokAssign | TokEscape | TokDot | TokComma
+  | TokAssign | TokDot | TokComma
   | TokSemiColon | TokColon | TokQuestion
 
   -- Conditional
@@ -60,8 +59,3 @@ data TokenType
   | TokFloorDivAssign | TokPowAssign | TokAddAssign | TokSubAssign | TokMulAssign | TokDivAssign | TokModAssign 
   | TokBinAndAssign | TokBinOrAssign | TokBinXorAssign | TokBinLShiftAssign | TokBinRShiftAssign
   deriving (Show, Eq)
-
-
--- Token formatter
-formatToken :: Token -> String
-formatToken (Token t (TokenPos l c)) = show t ++ "    (at line " ++ show l ++ " column " ++ show c ++ ")"

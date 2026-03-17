@@ -30,9 +30,11 @@ library
       Lang.Eval.Eval
       Lang.Eval.Print
       Lang.Eval.Types
+      Lang.Lexer.Helper
       Lang.Lexer.Lexer
       Lang.Lexer.Tokens
       Lang.Parser.Expr
+      Lang.Parser.Helper
       Lang.Parser.Parser
       Lang.Repl.Commands
       Lang.Repl.Env

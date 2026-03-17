@@ -4,9 +4,11 @@ import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import Lang.Eval.Eval (evalStmt, runEval)
 import Lang.Eval.Print (printEval, printEvalPretty)
-import Lang.Lexer.Lexer (printTokens, runLexer)
+import Lang.Lexer.Lexer (runLexer)
+import Lang.Lexer.Helper (printTokens)
 import Lang.Parser.Expr (Stmt)
-import Lang.Parser.Parser (printAST, runParser)
+import Lang.Parser.Parser (runParser)
+import Lang.Parser.Helper (printAST)
 import Lang.Repl.Env (ReplEnv (programEnv, replFlags), ReplFlags (..))
 import Lang.Repl.Helper (putStrLnRepl)
 import System.Console.Haskeline (InputT)
@@ -21,7 +23,7 @@ runLine rEnv line = do
       when ((showTokens . replFlags) rEnv) $ liftIO $ printTokens tokens
 
       -- Parse --
-      case runParser tokens of
+      case runParser line tokens of
         Left err -> errReturn err rEnv -- Parse error
         Right stmts -> do
           when ((showAST . replFlags) rEnv) $ liftIO $ printAST stmts

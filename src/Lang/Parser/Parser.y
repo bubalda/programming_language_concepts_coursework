@@ -1,9 +1,10 @@
 -- https://haskell-happy.readthedocs.io/en/latest/using.html
 {
-module Lang.Parser.Parser (runParser, printAST) where
-import Lang.Lexer.Tokens (TokenType(..), Token(..), formatToken)
+module Lang.Parser.Parser (runParser) where
+import Lang.Lexer.Tokens (Token(..), TokenType(..), TokenPos(..))
+import Lang.Parser.Helper (parserIgnore, formatRenderError)
 import Lang.Parser.Expr (Expr(..), Stmt(..))
-import Lang.Repl.Helper (wrapSection)
+import Lang.Repl.Helper (formatPos)
 }
 
 %name parse
@@ -35,7 +36,6 @@ import Lang.Repl.Helper (wrapSection)
   '>>='                          { Token TokBinRShiftAssign _ }
   '='                            { Token TokAssign          _ }
 
-  '\\'                           { Token TokEscape          _ }
   '.'                            { Token TokDot             _ }
   ','                            { Token TokComma           _ }
   ':'                            { Token TokColon           _ }
@@ -112,9 +112,12 @@ Program
 Stmts -- Statement should end using a semicolon (;)
   : Stmt ';' Stmts                              { $1 : $3 }
   | Stmt ';'                                    { [$1] }
+  | Stmt                                        { [$1] }
 
 Stmt
-  : 'if' '(' Expr ')' IfBlock ElseBlock         { If $3 $5 $6 }
+  : 'if' '(' Expr ')' Block ElseBlock           { If $3 $5 $6 }
+  | 'for' '(' Stmt ';' Expr ';' Stmt ')' Block  { For $3 $5 $7 $9 }
+  | 'while' '(' Expr ')' Block                  { While $3 $5 }
   | type ident '=' Expr                         { AssignWithType $1 $2 $4 }
   | ident '=' Expr                              { Assign $1 $3 }
   | ident '//=' Expr                            { Assign $1 (FloorDiv  (Var $1) $3) }
@@ -131,11 +134,10 @@ Stmt
   | ident '>>=' Expr                            { Assign $1 (BinRShift (Var $1) $3) }
   | Expr                                        { ExprStmt $1 }
 
-
--- Turn display tokens off before testing this to prevent littering the cli
--- if (true) {doIf = 1;}; if (true) {doIf = 1;} else if (false) {doElif = 2;}; if (true) {doIf = 1;} else if (false) {doElif = 2;} else {doElse = 1;};
-IfBlock
+Block
   : '{' Stmts '}'                               { $2 }
+  | Stmt ';'                                    { [$1] }
+  | '{' '}'                                     { [] }
 
 ElseBlock
   : 'else' '{' Stmts '}'                        { Just $3 }
@@ -163,11 +165,14 @@ Expr
   | Expr '>>' Expr                              { BinRShift $1 $3 }
   | Expr '+' Expr                               { Add $1 $3 }
   | Expr '-' Expr                               { Sub $1 $3 }
+  
   | '!' Expr %prec NOT                          { Not $2 }
+  
   | '(' Expr ')'                                { Brack $2 }
   | '[' Expr ']'                                { SqBrack $2 }
-  | '{' Expr '}'                                { CBrack $2 }
+  
   | '-' Expr %prec NEG                          { Negate $2 }
+  
   | 'null'                                      { NullLit }
   | int                                         { IntLit $1 }
   | char                                        { CharLit $1 }
@@ -178,19 +183,13 @@ Expr
 
 
 {
--- TODO error improvements
 -- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
-parseError [] = Left "Parse error"                    -- Should be handled by REPL (ignore and reprompt) (test "1 +")
-parseError (t:_) = Left $ "Parse error at token: " ++ formatToken t  
-    
-runParser :: [Token] -> Either String [Stmt]
-runParser toks = parse (filter (not . parserIgnore . tokenType) toks)
-  where
-    parserIgnore :: TokenType -> Bool
-    parserIgnore TokEOF         = True
-    parserIgnore _              = False
+parseError [] = Left "<PARSER ERROR> -- Unexpected end of input"
+parseError ((Token tt (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected token `" ++ show tt ++ "`"
 
-printAST :: [Stmt] -> IO ()
-printAST asts = wrapSection "Abstract Syntax Tree (AST)" (mapM_ (putStrLn . show) asts)
+runParser :: String -> [Token] -> Either String [Stmt]
+runParser src toks = case parse (filter (not . parserIgnore . tokenType) toks) of
+  Right ast -> Right ast
+  Left err -> formatRenderError src err
 }

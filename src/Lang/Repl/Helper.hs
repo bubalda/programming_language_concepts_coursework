@@ -6,6 +6,7 @@ module Lang.Repl.Helper
     wrapSection,
     uppercase,
     putStrLnRepl,
+    formatPos
   )
 where
 
@@ -40,9 +41,9 @@ duplicate s n = concat (replicate n s)
 
 wrapSection :: String -> IO () -> IO ()
 wrapSection title content = do
-  putStrLn ""
   putStrLn header
   content
+  putStrLn ""
   where
     middle = " " ++ title ++ " "
     padding = headerWidth - length middle
@@ -52,3 +53,7 @@ wrapSection title content = do
 
 uppercase :: String -> String
 uppercase = map toUpper
+
+-- Allows VSCode shortcut to code position
+formatPos :: Int -> Int -> String
+formatPos l c = show l ++ ":" ++ show c ++ ": "

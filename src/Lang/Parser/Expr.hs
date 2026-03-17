@@ -16,4 +16,6 @@ data Stmt
   | Assign String Expr
   | ExprStmt Expr
   | If Expr [Stmt] (Maybe [Stmt])
+  | For Stmt Expr Stmt [Stmt]
+  | While Expr [Stmt]
   deriving (Show)

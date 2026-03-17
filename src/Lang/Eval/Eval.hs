@@ -21,10 +21,10 @@ evalStmt env stmt =
       val <- evalExpr env expr
       let env' = Map.insert name val env
       return (env', val)
-    AssignWithType vType name expr -> do -- TODO: Type checking here
-      val <- evalExpr env expr
-      let env' = Map.insert name val env
-      return (env', val)
+    AssignWithType vType name expr -> throwError "ERROR: `Type assignment` method not implemented."
+    If cond ifBlock elseBlock -> throwError "ERROR: `If` method not implemented."
+    For start step stop forBlock -> throwError "ERROR: `For` method not implemented."
+    While cond whileBlock -> throwError "ERROR: `While` method not implemented."
 
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
 evalExpr env expr =

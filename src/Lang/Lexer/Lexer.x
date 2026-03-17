@@ -1,8 +1,7 @@
 {
-module Lang.Lexer.Lexer (runLexer, printTokens) where
-import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..), formatToken)
-import Lang.Repl.Helper (wrapSection)
-import Text.Printf (printf)
+module Lang.Lexer.Lexer (runLexer) where
+import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
+import Lang.Repl.Helper (formatPos)
 }
 
 -- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monad-wrapper
@@ -88,7 +87,6 @@ tokens :-
   ">>"                           { simpleTokenize TokBinRShift }
 
   -- Special
-  "\\"                           { simpleTokenize TokEscape }
   "."                            { simpleTokenize TokDot }
   ","                            { simpleTokenize TokComma }
   ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
@@ -100,6 +98,15 @@ tokens :-
 
   -- Catch-all Error
   .                              { tokenize TokError }
+
+-- TODO
+-- terminal 'in' is unused
+-- terminal ':' is unused
+-- terminal '?' is unused
+-- terminal '[]' is unused
+-- terminal ',' is unused
+-- terminal 'fun' is unused
+-- terminal '.' is unused
 
 {
 -- Tokenize Keywords and Identifier
@@ -152,7 +159,12 @@ valueTokenize tt = tokenize (tt . read)
 -- REPL
 -- Generate tokens for parser / debug printer
 runLexer :: String -> Either String [Token]
-runLexer input = runAlex input scanTokens
+runLexer input = case runAlex input scanTokens of
+  Left err -> Left err
+  Right toks ->
+    case findTokError toks of
+      Just err -> Left err
+      Nothing  -> Right toks
   where
     scanTokens :: Alex [Token]
     scanTokens = go
@@ -165,12 +177,16 @@ runLexer input = runAlex input scanTokens
               rest <- go
               return (tok : rest)
 
--- Debug printer
-printTokens :: [Token] -> IO ()
-printTokens tokens = do
-  wrapSection "Tokens" (mapM_ printToken tokens)
-  where
-    printToken (Token TokEOF _) = return () -- Hide TokEOF
-    printToken t@(Token (TokError _) _) = putStrLn $ "Lexer Error: Could not tokenize string " ++ formatToken t
-    printToken (Token t _) = putStrLn $ show t
+    findTokError :: [Token] -> Maybe String
+    findTokError = goErr
+      where
+        goErr [] = Nothing
+        goErr (Token (TokError s) pos : _) =
+          Just $ formatPosMsg pos s
+        goErr (_:xs) = goErr xs
+
+    formatPosMsg (TokenPos l c) s =
+      formatPos l c
+      ++ "<LEXER ERROR> -- Could not tokenize string "
+      ++ show s
 }
