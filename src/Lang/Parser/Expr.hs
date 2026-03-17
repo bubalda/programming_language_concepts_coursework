@@ -11,7 +11,8 @@ data Expr
   | And Expr Expr | Or Expr Expr | Not Expr 
   deriving (Show)
 
-data Stmt
-  = Assign String Expr
+data Stmt 
+  = AssignWithType String String Expr
+  | Assign String Expr
   | ExprStmt Expr
   deriving (Show)

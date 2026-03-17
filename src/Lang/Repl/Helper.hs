@@ -6,14 +6,13 @@ module Lang.Repl.Helper
     wrapSection,
     uppercase,
     putStrLnRepl,
-    removeStartEnd,
   )
 where
 
-import System.Exit (exitSuccess)
-import Data.Char (toUpper)
 import Control.Monad.IO.Class (liftIO)
+import Data.Char (toUpper)
 import System.Console.Haskeline (InputT)
+import System.Exit (exitSuccess)
 
 -- Repl Prints and Checks
 replWelcome :: IO ()
@@ -51,13 +50,5 @@ wrapSection title content = do
     rightPad = padding - leftPad
     header = duplicate "=" leftPad ++ middle ++ duplicate "=" rightPad
 
-
 uppercase :: String -> String
 uppercase = map toUpper
-
--- Used for len > 2 strings
--- Unless alex has bugs and could not lex '...' / "..."
--- Otherwise the risks of error are VERY low
-removeStartEnd :: String -> String
-removeStartEnd x | length x < 3 = error "Length of string " ++ x ++ " must be greater than 2."
-removeStartEnd x = (drop 1 . init) x

@@ -8,7 +8,6 @@ import Lang.Eval.Types (EvalM, ProgramEnv, Value(..))
 import Lang.Parser.Expr (Expr(..), Stmt(..))
 import Lang.Eval.Errors (expectVInt, expectVBool)
 
--- TODO Pending improvements to make
 runEval :: EvalM a -> Either String a
 runEval ev = runIdentity (runExceptT ev)
 
@@ -19,6 +18,10 @@ evalStmt env stmt =
       val <- evalExpr env e
       return (env, val)
     Assign name expr -> do
+      val <- evalExpr env expr
+      let env' = Map.insert name val env
+      return (env', val)
+    AssignWithType vType name expr -> do -- TODO: Type checking here
       val <- evalExpr env expr
       let env' = Map.insert name val env
       return (env', val)

@@ -11,9 +11,9 @@ printEval :: Value -> IO ()
 printEval (VBool b) = putStrLn (show b)
 printEval (VInt i) = putStrLn (show i)
 printEval (VChar v) = putStrLn (show v)
-printEval (VDouble d) = putStrLn (show d)
+printEval (VDouble f) = putStrLn (show f)
 printEval (VString s) = putStrLn s
 printEval (VNull) = putStrLn "null"
 
-printEvalPretty :: Value -> IO ()
-printEvalPretty val = wrapSection "Evaluation Result" (printEval val)
+printEvalPretty :: Value -> Int -> IO ()
+printEvalPretty val line = wrapSection ("Evaluation Result (Line " ++ show line ++ ")") (printEval val)

@@ -19,23 +19,46 @@ data TokenPos = TokenPos
   deriving (Show, Eq)
 
 data TokenType
-  = TokEOF                                                                                    -- End of program
-  | TokError String                                                                           -- Error handled by lexer
-  | TokIdent String                                                                           -- Variable names
-  | TokType String                                                                            -- Static type declaration
-  | TokInt Int | TokChar Char | TokBool Bool | TokDouble Double | TokString String | TokNull  -- Value itself
-  | TokAssign | TokEscape | TokDot | TokComma | TokColon | TokSemiColon                       -- Special characters
-  | TokIf | TokElse                                                                           -- Conditional
-  | TokFor | TokWhile                                                                         -- Loops
-  | TokFunc                                                                                   -- Abstractions
-  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack | TokLCBrack | TokRCBrack               -- Scoping
-  | TokNot | TokAnd | TokOr                                                                   -- Logical Op
-  | TokEq | TokNeq | TokLte | TokLt | TokGte | TokGt                                          -- Comparison Op
-  | TokFloorDiv | TokPow | TokAdd | TokSub | TokMul | TokDiv | TokMod       -- Arithmetic Op
-  | TokBinAnd | TokBinOr | TokBinXor | TokBinLShift | TokBinRShift                            -- Binary Arithmetic Op
+  = TokEOF            -- End of program
+  | TokError String   -- Error handled by lexer
+  | TokIdent String   -- Variable names
+  | TokType String    -- Static type declaration
 
-  -- Assignment shortcuts
-  | TokFloorDivAssign | TokPowAssign | TokAddAssign | TokSubAssign | TokMulAssign | TokDivAssign | TokModAssign | TokBinAndAssign | TokBinOrAssign | TokBinXorAssign | TokBinLShiftAssign | TokBinRShiftAssign
+  -- Values
+  | TokInt Int | TokChar Char | TokBool Bool | TokNull
+  | TokDouble Double | TokString String
+
+  -- Special characters
+  | TokAssign | TokEscape | TokDot | TokComma
+  | TokSemiColon | TokColon | TokQuestion
+
+  -- Conditional
+  | TokIf | TokElse
+
+  -- Loops
+  | TokFor | TokWhile                                                                         
+
+  -- Abstractions
+  | TokFunc                                                                    
+
+  -- Scoping               
+  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack | TokLCBrack | TokRCBrack
+
+  -- Logical Op
+  | TokExclamation | TokAnd | TokOr                                                                   
+
+  -- Comparison Op
+  | TokEq | TokNeq | TokLte | TokLt | TokGte | TokGt                                          
+
+  -- Arithmetic Op
+  | TokFloorDiv | TokPow | TokAdd | TokSub | TokMul | TokDiv | TokMod
+
+  -- Binary Arithmetic Op
+  | TokBinAnd | TokBinOr | TokBinXor | TokBinLShift | TokBinRShift                            
+
+  -- Operation Assignments
+  | TokFloorDivAssign | TokPowAssign | TokAddAssign | TokSubAssign | TokMulAssign | TokDivAssign | TokModAssign 
+  | TokBinAndAssign | TokBinOrAssign | TokBinXorAssign | TokBinLShiftAssign | TokBinRShiftAssign
   deriving (Show, Eq)
 
 

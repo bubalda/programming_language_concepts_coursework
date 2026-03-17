@@ -1,7 +1,7 @@
 {
 module Lang.Lexer.Lexer (runLexer, printTokens) where
 import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..), formatToken)
-import Lang.Repl.Helper (wrapSection, removeStartEnd)
+import Lang.Repl.Helper (wrapSection)
 import Text.Printf (printf)
 }
 
@@ -14,6 +14,15 @@ $alpha       = [a-zA-Z]
 $char        = [^\'\\\n]
 $stringChar  = [^\"\\\n]
 
+-- https://gdevanla.github.io/posts/wya-lexer.html#numerical_values
+@digitpart     =  $digit([_]|$digit)*
+@fraction      =  [\.] @digitpart
+@pointfloat    =  (@digitpart)* @fraction | @digitpart[\.]
+@exponent      =  [eE] ([\+\-]?) @digitpart
+@exponentfloat =  (@digitpart | @pointfloat)* @exponent
+@floatnumber   =  @pointfloat | @exponentfloat
+
+
 -- Token matches by (Top-Down) (Long-Short)
 tokens :-
   -- Ignore
@@ -21,6 +30,7 @@ tokens :-
   "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
 
   -- Literals
+  @floatnumber                   { valueTokenize TokDouble }
   $digit+                        { valueTokenize TokInt }
   \'($char|\\.)\'                { valueTokenize TokChar }
   \"($stringChar|\\.)*\"         { valueTokenize TokString }
@@ -49,7 +59,7 @@ tokens :-
   "}"                            { simpleTokenize TokRCBrack }
 
   -- Logical Operators
-  "!"                            { simpleTokenize TokNot }
+  "!"                            { simpleTokenize TokExclamation }
   "&&"                           { simpleTokenize TokAnd }
   "||"                           { simpleTokenize TokOr }
 
@@ -83,6 +93,7 @@ tokens :-
   ","                            { simpleTokenize TokComma }
   ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
   ";"                            { simpleTokenize TokSemiColon }
+  "?"                            { simpleTokenize TokQuestion }
 
   -- Identifier / Keywords (check identTokenize)
   [_ $alpha] [$alpha $digit _]*  { identTokenize }
@@ -98,24 +109,25 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> identifier (take len str)
     identifier :: String -> TokenType
     identifier s =
       case s of
-        "true"  -> TokBool True
-        "false" -> TokBool False
-        "null"  -> TokNull
+        "true"    -> TokBool True
+        "false"   -> TokBool False
+        "null"    -> TokNull
 
-        "if"    -> TokIf
-        "else"  -> TokElse
+        "if"      -> TokIf
+        "else"    -> TokElse
 
-        "for"   -> TokFor
-        "while" -> TokWhile
+        "for"     -> TokFor
+        "while"   -> TokWhile
 
-        "fun"   -> TokFunc
+        "fun"     -> TokFunc
 
-        "char"  -> TokType s
-        "int"   -> TokType s
-        "bool"  -> TokType s
-        "double"-> TokType s
+        "char"    -> TokType s
+        "int"     -> TokType s
+        "bool"    -> TokType s
+        "double"  -> TokType s
+        "String"  -> TokType s
 
-        s       -> TokIdent s
+        s         -> TokIdent s
 
 -- End of program
 alexEOF :: Alex Token

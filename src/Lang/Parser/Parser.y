@@ -22,12 +22,12 @@ import Lang.Repl.Helper (wrapSection)
   ident                          { Token (TokIdent $$)      _ }
   
   '//='                          { Token TokFloorDivAssign  _ }
-  '**='                          { Token TokPowAssign     _ }
-  '+='                           { Token TokAddAssign      _ }
-  '-='                           { Token TokSubAssign     _ }
-  '*='                           { Token TokMulAssign  _ }
-  '/='                           { Token TokDivAssign  _ }
-  '%='                           { Token TokModAssign    _ }
+  '**='                          { Token TokPowAssign       _ }
+  '+='                           { Token TokAddAssign       _ }
+  '-='                           { Token TokSubAssign       _ }
+  '*='                           { Token TokMulAssign       _ }
+  '/='                           { Token TokDivAssign       _ }
+  '%='                           { Token TokModAssign       _ }
   '&='                           { Token TokBinAndAssign    _ }
   '|='                           { Token TokBinOrAssign     _ }
   '^='                           { Token TokBinXorAssign    _ }
@@ -40,6 +40,7 @@ import Lang.Repl.Helper (wrapSection)
   ','                            { Token TokComma           _ }
   ':'                            { Token TokColon           _ }
   ';'                            { Token TokSemiColon       _ }
+  '?'                            { Token TokQuestion        _ }
 
   '('                            { Token TokLBrack          _ }
   ')'                            { Token TokRBrack          _ }
@@ -48,7 +49,7 @@ import Lang.Repl.Helper (wrapSection)
   '{'                            { Token TokLCBrack         _ }
   '}'                            { Token TokRCBrack         _ }
 
-  '!'                            { Token TokNot             _ }
+  '!'                            { Token TokExclamation     _ }
   '&&'                           { Token TokAnd             _ }
   '||'                           { Token TokOr              _ }
 
@@ -60,12 +61,12 @@ import Lang.Repl.Helper (wrapSection)
   '>'                            { Token TokGt              _ }
 
   '//'                           { Token TokFloorDiv        _ }
-  '**'                           { Token TokPow           _ }
-  '+'                            { Token TokAdd            _ }
-  '-'                            { Token TokSub           _ }
-  '*'                            { Token TokMul        _ }
-  '/'                            { Token TokDiv        _ }
-  '%'                            { Token TokMod          _ }
+  '**'                           { Token TokPow             _ }
+  '+'                            { Token TokAdd             _ }
+  '-'                            { Token TokSub             _ }
+  '*'                            { Token TokMul             _ }
+  '/'                            { Token TokDiv             _ }
+  '%'                            { Token TokMod             _ }
 
   '&'                            { Token TokBinAnd          _ }
   '|'                            { Token TokBinOr           _ }
@@ -103,8 +104,20 @@ import Lang.Repl.Helper (wrapSection)
 
 %%
 
+Program
+  : Stmts                    { $1 }
+
+-- End a statement using semicolons (;)
+-- Optional if one line only
+Stmts
+  : Stmt ';' Stmts           { $1 : $3 }
+  | Stmt ';'                 { [$1] }
+  | Stmt                     { [$1] }
+
 Stmt
-  : ident '//=' Expr         { Assign $1 (FloorDiv  (Var $1) $3) }
+  : type ident '=' Expr      { AssignWithType $1 $2 $4 }
+  | ident '=' Expr           { Assign $1 $3 }
+  | ident '//=' Expr         { Assign $1 (FloorDiv  (Var $1) $3) }
   | ident '**=' Expr         { Assign $1 (Pow       (Var $1) $3) }
   | ident '+=' Expr          { Assign $1 (Add       (Var $1) $3) }
   | ident '-=' Expr          { Assign $1 (Sub       (Var $1) $3) }
@@ -116,7 +129,6 @@ Stmt
   | ident '^=' Expr          { Assign $1 (BinXor    (Var $1) $3) }
   | ident '<<=' Expr         { Assign $1 (BinLShift (Var $1) $3) }
   | ident '>>=' Expr         { Assign $1 (BinRShift (Var $1) $3) }
-  | ident '=' Expr           { Assign $1 $3 }
   | Expr                     { ExprStmt $1 }
 
 Expr
@@ -169,16 +181,16 @@ Expr
 -- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
 parseError [] = Left "Parse error"                    -- Should be handled by REPL (ignore and reprompt) (test "1 +")
-parseError (t:_) =Left $ "Parse error at token: " ++ formatToken t  
+parseError (t:_) = Left $ "Parse error at token: " ++ formatToken t  
     
-runParser :: [Token] -> Either String Stmt
+runParser :: [Token] -> Either String [Stmt]
 runParser toks = parse (filter (not . parserIgnore . tokenType) toks)
   where
     parserIgnore :: TokenType -> Bool
     parserIgnore TokEOF         = True
-    parserIgnore (TokError _)   = True
     parserIgnore _              = False
 
-printAST :: Stmt -> IO ()
-printAST ast = wrapSection "Abstract Syntax Tree (AST)" (putStrLn (show ast))
+printAST :: [Stmt] -> IO ()
+printAST asts = wrapSection "Abstract Syntax Tree (AST)" (mapM_ (putStrLn . show) asts)
 }
+    
