@@ -101,83 +101,84 @@ import Lang.Repl.Helper (wrapSection)
 %left '*' '**' '/' '//' '%'       -- 3 + 4 * 5 => 3 + (4 * 5)
 %right NOT
 %left NEG
+%nonassoc 'if'
+%nonassoc 'else'
 
 %%
 
 Program
-  : Stmts                    { $1 }
+  : Stmts                             { $1 }
 
--- End a statement using semicolons (;)
--- Optional if one line only
-Stmts
-  : Stmt ';' Stmts           { $1 : $3 }
-  | Stmt ';'                 { [$1] }
-  | Stmt                     { [$1] }
+Stmts -- Statement should end using a semicolon (;)
+  : Stmt ';' Stmts                              { $1 : $3 }
+  | Stmt ';'                                    { [$1] }
 
 Stmt
-  : type ident '=' Expr      { AssignWithType $1 $2 $4 }
-  | ident '=' Expr           { Assign $1 $3 }
-  | ident '//=' Expr         { Assign $1 (FloorDiv  (Var $1) $3) }
-  | ident '**=' Expr         { Assign $1 (Pow       (Var $1) $3) }
-  | ident '+=' Expr          { Assign $1 (Add       (Var $1) $3) }
-  | ident '-=' Expr          { Assign $1 (Sub       (Var $1) $3) }
-  | ident '*=' Expr          { Assign $1 (Mul       (Var $1) $3) }
-  | ident '/=' Expr          { Assign $1 (Div       (Var $1) $3) }
-  | ident '%=' Expr          { Assign $1 (Mod       (Var $1) $3) }
-  | ident '&=' Expr          { Assign $1 (BinAnd    (Var $1) $3) }
-  | ident '|=' Expr          { Assign $1 (BinOr     (Var $1) $3) }
-  | ident '^=' Expr          { Assign $1 (BinXor    (Var $1) $3) }
-  | ident '<<=' Expr         { Assign $1 (BinLShift (Var $1) $3) }
-  | ident '>>=' Expr         { Assign $1 (BinRShift (Var $1) $3) }
-  | Expr                     { ExprStmt $1 }
+  : 'if' '(' Expr ')' IfBlock ElseBlock         { If $3 $5 $6 }
+  | type ident '=' Expr                         { AssignWithType $1 $2 $4 }
+  | ident '=' Expr                              { Assign $1 $3 }
+  | ident '//=' Expr                            { Assign $1 (FloorDiv  (Var $1) $3) }
+  | ident '**=' Expr                            { Assign $1 (Pow       (Var $1) $3) }
+  | ident '+=' Expr                             { Assign $1 (Add       (Var $1) $3) }
+  | ident '-=' Expr                             { Assign $1 (Sub       (Var $1) $3) }
+  | ident '*=' Expr                             { Assign $1 (Mul       (Var $1) $3) }
+  | ident '/=' Expr                             { Assign $1 (Div       (Var $1) $3) }
+  | ident '%=' Expr                             { Assign $1 (Mod       (Var $1) $3) }
+  | ident '&=' Expr                             { Assign $1 (BinAnd    (Var $1) $3) }
+  | ident '|=' Expr                             { Assign $1 (BinOr     (Var $1) $3) }
+  | ident '^=' Expr                             { Assign $1 (BinXor    (Var $1) $3) }
+  | ident '<<=' Expr                            { Assign $1 (BinLShift (Var $1) $3) }
+  | ident '>>=' Expr                            { Assign $1 (BinRShift (Var $1) $3) }
+  | Expr                                        { ExprStmt $1 }
+
+
+-- Turn display tokens off before testing this to prevent littering the cli
+-- if (true) {doIf = 1;}; if (true) {doIf = 1;} else if (false) {doElif = 2;}; if (true) {doIf = 1;} else if (false) {doElif = 2;} else {doElse = 1;};
+IfBlock
+  : '{' Stmts '}'                               { $2 }
+
+ElseBlock
+  : 'else' '{' Stmts '}'                        { Just $3 }
+  | 'else' Stmt                                 { Just [$2] }
+  |                                             { Nothing }
 
 Expr
-  : Expr '||' Expr          { Or $1 $3 }
-  | Expr '&&' Expr          { And $1 $3 }
-
-  | Expr '|' Expr           { BinOr  $1 $3 }
-  | Expr '^' Expr           { BinXor $1 $3 }
-  | Expr '&' Expr           { BinAnd $1 $3 }
-  
-  | Expr '==' Expr          { Eq $1 $3 }
-  | Expr '!=' Expr          { Neq $1 $3 }
-
-  | Expr '<=' Expr          { Lte $1 $3 }
-  | Expr '<' Expr           { Lt $1 $3 }
-  | Expr '>=' Expr          { Gte $1 $3 }
-  | Expr '>' Expr           { Gt $1 $3 }
-
-  | Expr '*' Expr           { Mul $1 $3 }
-  | Expr '/' Expr           { Div $1 $3 }
-  | Expr '%' Expr           { Mod $1 $3 }
-  | Expr '**' Expr          { Pow $1 $3 }
-  | Expr '//' Expr          { FloorDiv $1 $3 }
-
-  | Expr '<<' Expr          { BinLShift $1 $3 }
-  | Expr '>>' Expr          { BinRShift $1 $3 }
-
-  | Expr '+' Expr           { Add $1 $3 }
-  | Expr '-' Expr           { Sub $1 $3 }
-
-  | '!' Expr %prec NOT      { Not $2 }
-  
-  | '(' Expr ')'            { Brack $2 }
-  | '[' Expr ']'            { SqBrack $2 }
-  | '{' Expr '}'            { CBrack $2 }
-
-  | '-' Expr %prec NEG      { Negate $2 }
-
-  | 'null'                  { NullLit }
-  | int                     { IntLit $1 }
-  | char                    { CharLit $1 }
-  | bool                    { BoolLit $1 }
-  | double                  { DoubleLit $1 }
-  | string                  { StringLit $1 }
-
-  | ident                   { Var $1 }
+  : Expr '||' Expr                              { Or $1 $3 }
+  | Expr '&&' Expr                              { And $1 $3 }
+  | Expr '|' Expr                               { BinOr  $1 $3 }
+  | Expr '^' Expr                               { BinXor $1 $3 }
+  | Expr '&' Expr                               { BinAnd $1 $3 }
+  | Expr '==' Expr                              { Eq $1 $3 }
+  | Expr '!=' Expr                              { Neq $1 $3 }
+  | Expr '<=' Expr                              { Lte $1 $3 }
+  | Expr '<' Expr                               { Lt $1 $3 }
+  | Expr '>=' Expr                              { Gte $1 $3 }
+  | Expr '>' Expr                               { Gt $1 $3 }
+  | Expr '*' Expr                               { Mul $1 $3 }
+  | Expr '/' Expr                               { Div $1 $3 }
+  | Expr '%' Expr                               { Mod $1 $3 }
+  | Expr '**' Expr                              { Pow $1 $3 }
+  | Expr '//' Expr                              { FloorDiv $1 $3 }
+  | Expr '<<' Expr                              { BinLShift $1 $3 }
+  | Expr '>>' Expr                              { BinRShift $1 $3 }
+  | Expr '+' Expr                               { Add $1 $3 }
+  | Expr '-' Expr                               { Sub $1 $3 }
+  | '!' Expr %prec NOT                          { Not $2 }
+  | '(' Expr ')'                                { Brack $2 }
+  | '[' Expr ']'                                { SqBrack $2 }
+  | '{' Expr '}'                                { CBrack $2 }
+  | '-' Expr %prec NEG                          { Negate $2 }
+  | 'null'                                      { NullLit }
+  | int                                         { IntLit $1 }
+  | char                                        { CharLit $1 }
+  | bool                                        { BoolLit $1 }
+  | double                                      { DoubleLit $1 }
+  | string                                      { StringLit $1 }
+  | ident                                       { Var $1 }
 
 
 {
+-- TODO error improvements
 -- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
 parseError [] = Left "Parse error"                    -- Should be handled by REPL (ignore and reprompt) (test "1 +")
@@ -193,4 +194,3 @@ runParser toks = parse (filter (not . parserIgnore . tokenType) toks)
 printAST :: [Stmt] -> IO ()
 printAST asts = wrapSection "Abstract Syntax Tree (AST)" (mapM_ (putStrLn . show) asts)
 }
-    

@@ -15,4 +15,5 @@ data Stmt
   = AssignWithType String String Expr
   | Assign String Expr
   | ExprStmt Expr
+  | If Expr [Stmt] (Maybe [Stmt])
   deriving (Show)
