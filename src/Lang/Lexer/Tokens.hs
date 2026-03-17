@@ -28,11 +28,14 @@ data TokenType
   | TokIf | TokElse                                                                           -- Conditional
   | TokFor | TokWhile                                                                         -- Loops
   | TokFunc                                                                                   -- Abstractions
-  | TokLBrack | TokRBrack | TokLSQBrack | TokRSQBrack | TokLCBrack | TokRCBrack               -- Scoping
+  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack | TokLCBrack | TokRCBrack               -- Scoping
   | TokNot | TokAnd | TokOr                                                                   -- Logical Op
-  | TokEQ | TokNEQ | TokLTE | TokLT | TokGTE | TokGT                                          -- Comparison Op
-  | TokFloorDiv | TokPower | TokPlus | TokMinus | TokMultiply | TokDivision | TokModulo       -- Arithmetic Op
-  | TokBinAND | TokBinOR | TokBinXOR | TokBinLShift | TokBinRShift                            -- Binary Arithmetic Op
+  | TokEq | TokNeq | TokLte | TokLt | TokGte | TokGt                                          -- Comparison Op
+  | TokFloorDiv | TokPow | TokAdd | TokSub | TokMul | TokDiv | TokMod       -- Arithmetic Op
+  | TokBinAnd | TokBinOr | TokBinXor | TokBinLShift | TokBinRShift                            -- Binary Arithmetic Op
+
+  -- Assignment shortcuts
+  | TokFloorDivAssign | TokPowAssign | TokAddAssign | TokSubAssign | TokMulAssign | TokDivAssign | TokModAssign | TokBinAndAssign | TokBinOrAssign | TokBinXorAssign | TokBinLShiftAssign | TokBinRShiftAssign
   deriving (Show, Eq)
 
 

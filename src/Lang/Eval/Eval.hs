@@ -4,7 +4,8 @@ import Control.Monad.Except (runExceptT, throwError)
 import Data.Bits (Bits (shiftL, shiftR, xor), (.&.), (.|.))
 import Data.Functor.Identity (Identity (runIdentity))
 import qualified Data.Map as Map
-import Lang.Eval.Types (EvalM, Expr(..), ProgramEnv, Stmt(..), Value(..))
+import Lang.Eval.Types (EvalM, ProgramEnv, Value(..))
+import Lang.Parser.Expr (Expr(..), Stmt(..))
 import Lang.Eval.Errors (expectVInt, expectVBool)
 
 -- TODO Pending improvements to make
@@ -37,6 +38,8 @@ evalExpr env expr =
         Nothing -> throwError ("Undefined identifier: " ++ v)
 
     Brack a -> eval a
+    SqBrack a -> eval a
+    CBrack a -> eval a
 
     Add a b -> arithOpInt (+) a b
     Sub a b -> arithOpInt (-) a b
@@ -65,9 +68,9 @@ evalExpr env expr =
     Gte a b -> cmpOpInt (>=) a b
     Gt a b -> cmpOpInt (>) a b
 
-    BinAND a b -> bitOp (.&.) a b
-    BinOR a b -> bitOp (.|.) a b
-    BinXOR a b -> bitOp xor a b
+    BinAnd a b -> bitOp (.&.) a b
+    BinOr a b -> bitOp (.|.) a b
+    BinXor a b -> bitOp xor a b
     BinLShift a b -> bitOp shiftL a b
     BinRShift a b -> bitOp shiftR a b
 

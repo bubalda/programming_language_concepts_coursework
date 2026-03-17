@@ -32,6 +32,7 @@ library
       Lang.Eval.Types
       Lang.Lexer.Lexer
       Lang.Lexer.Tokens
+      Lang.Parser.Expr
       Lang.Parser.Parser
       Lang.Repl.Commands
       Lang.Repl.Env

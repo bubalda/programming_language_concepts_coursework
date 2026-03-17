@@ -2,7 +2,7 @@
 {
 module Lang.Parser.Parser (runParser, printAST) where
 import Lang.Lexer.Tokens (TokenType(..), Token(..), formatToken)
-import Lang.Eval.Types (Expr(..), Stmt(..))
+import Lang.Parser.Expr (Expr(..), Stmt(..))
 import Lang.Repl.Helper (wrapSection)
 }
 
@@ -21,7 +21,20 @@ import Lang.Repl.Helper (wrapSection)
   
   ident                          { Token (TokIdent $$)      _ }
   
+  '//='                          { Token TokFloorDivAssign  _ }
+  '**='                          { Token TokPowAssign     _ }
+  '+='                           { Token TokAddAssign      _ }
+  '-='                           { Token TokSubAssign     _ }
+  '*='                           { Token TokMulAssign  _ }
+  '/='                           { Token TokDivAssign  _ }
+  '%='                           { Token TokModAssign    _ }
+  '&='                           { Token TokBinAndAssign    _ }
+  '|='                           { Token TokBinOrAssign     _ }
+  '^='                           { Token TokBinXorAssign    _ }
+  '<<='                          { Token TokBinLShiftAssign _ }
+  '>>='                          { Token TokBinRShiftAssign _ }
   '='                            { Token TokAssign          _ }
+
   '\\'                           { Token TokEscape          _ }
   '.'                            { Token TokDot             _ }
   ','                            { Token TokComma           _ }
@@ -30,8 +43,8 @@ import Lang.Repl.Helper (wrapSection)
 
   '('                            { Token TokLBrack          _ }
   ')'                            { Token TokRBrack          _ }
-  '['                            { Token TokLSQBrack        _ }
-  ']'                            { Token TokRSQBrack        _ }
+  '['                            { Token TokLSqBrack        _ }
+  ']'                            { Token TokRSqBrack        _ }
   '{'                            { Token TokLCBrack         _ }
   '}'                            { Token TokRCBrack         _ }
 
@@ -39,24 +52,24 @@ import Lang.Repl.Helper (wrapSection)
   '&&'                           { Token TokAnd             _ }
   '||'                           { Token TokOr              _ }
 
-  '=='                           { Token TokEQ              _ }
-  '!='                           { Token TokNEQ             _ }
-  '<='                           { Token TokLTE             _ }
-  '<'                            { Token TokLT              _ }
-  '>='                           { Token TokGTE             _ }
-  '>'                            { Token TokGT              _ }
+  '=='                           { Token TokEq              _ }
+  '!='                           { Token TokNeq             _ }
+  '<='                           { Token TokLte             _ }
+  '<'                            { Token TokLt              _ }
+  '>='                           { Token TokGte             _ }
+  '>'                            { Token TokGt              _ }
 
   '//'                           { Token TokFloorDiv        _ }
-  '**'                           { Token TokPower           _ }
-  '+'                            { Token TokPlus            _ }
-  '-'                            { Token TokMinus           _ }
-  '*'                            { Token TokMultiply        _ }
-  '/'                            { Token TokDivision        _ }
-  '%'                            { Token TokModulo          _ }
+  '**'                           { Token TokPow           _ }
+  '+'                            { Token TokAdd            _ }
+  '-'                            { Token TokSub           _ }
+  '*'                            { Token TokMul        _ }
+  '/'                            { Token TokDiv        _ }
+  '%'                            { Token TokMod          _ }
 
-  '&'                            { Token TokBinAND          _ }
-  '|'                            { Token TokBinOR           _ }
-  '^'                            { Token TokBinXOR          _ }
+  '&'                            { Token TokBinAnd          _ }
+  '|'                            { Token TokBinOr           _ }
+  '^'                            { Token TokBinXor          _ }
   '<<'                           { Token TokBinLShift       _ }
   '>>'                           { Token TokBinRShift       _ }
 
@@ -74,6 +87,7 @@ import Lang.Repl.Helper (wrapSection)
 -- https://en.cppreference.com/w/c/language/operator_precedence.html
 -- https://haskell-happy.readthedocs.io/en/latest/using.html#context-dependent-precedence
 -- This declares both association and precedence so no need to declare multiple exprs for (+ -) < (* /)
+%right '//=' '**=' '+=' '-=' '*=' '/=' '%=' '&=' '|=' '^=' '<<=' '>>='
 %left '||'
 %left '&&'
 %left '|'
@@ -86,29 +100,40 @@ import Lang.Repl.Helper (wrapSection)
 %left '*' '**' '/' '//' '%'       -- 3 + 4 * 5 => 3 + (4 * 5)
 %right NOT
 %left NEG
--- right for += or ternary
 
 %%
 
 Stmt
-  : ident '=' Expr          { Assign $1 $3 }
-  | Expr                    { ExprStmt $1 }
+  : ident '//=' Expr         { Assign $1 (FloorDiv  (Var $1) $3) }
+  | ident '**=' Expr         { Assign $1 (Pow       (Var $1) $3) }
+  | ident '+=' Expr          { Assign $1 (Add       (Var $1) $3) }
+  | ident '-=' Expr          { Assign $1 (Sub       (Var $1) $3) }
+  | ident '*=' Expr          { Assign $1 (Mul       (Var $1) $3) }
+  | ident '/=' Expr          { Assign $1 (Div       (Var $1) $3) }
+  | ident '%=' Expr          { Assign $1 (Mod       (Var $1) $3) }
+  | ident '&=' Expr          { Assign $1 (BinAnd    (Var $1) $3) }
+  | ident '|=' Expr          { Assign $1 (BinOr     (Var $1) $3) }
+  | ident '^=' Expr          { Assign $1 (BinXor    (Var $1) $3) }
+  | ident '<<=' Expr         { Assign $1 (BinLShift (Var $1) $3) }
+  | ident '>>=' Expr         { Assign $1 (BinRShift (Var $1) $3) }
+  | ident '=' Expr           { Assign $1 $3 }
+  | Expr                     { ExprStmt $1 }
 
 Expr
   : Expr '||' Expr          { Or $1 $3 }
   | Expr '&&' Expr          { And $1 $3 }
 
-  | Expr '|' Expr           { BinOR  $1 $3 }
-  | Expr '^' Expr           { BinXOR $1 $3 }
-  | Expr '&' Expr           { BinAND $1 $3 }
+  | Expr '|' Expr           { BinOr  $1 $3 }
+  | Expr '^' Expr           { BinXor $1 $3 }
+  | Expr '&' Expr           { BinAnd $1 $3 }
   
   | Expr '==' Expr          { Eq $1 $3 }
   | Expr '!=' Expr          { Neq $1 $3 }
 
-  | Expr '<' Expr           { Lt $1 $3 }
   | Expr '<=' Expr          { Lte $1 $3 }
-  | Expr '>' Expr           { Gt $1 $3 }
+  | Expr '<' Expr           { Lt $1 $3 }
   | Expr '>=' Expr          { Gte $1 $3 }
+  | Expr '>' Expr           { Gt $1 $3 }
 
   | Expr '*' Expr           { Mul $1 $3 }
   | Expr '/' Expr           { Div $1 $3 }
@@ -123,7 +148,11 @@ Expr
   | Expr '-' Expr           { Sub $1 $3 }
 
   | '!' Expr %prec NOT      { Not $2 }
+  
   | '(' Expr ')'            { Brack $2 }
+  | '[' Expr ']'            { SqBrack $2 }
+  | '{' Expr '}'            { CBrack $2 }
+
   | '-' Expr %prec NEG      { Negate $2 }
 
   | 'null'                  { NullLit }

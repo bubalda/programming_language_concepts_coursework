@@ -25,19 +25,26 @@ tokens :-
   \'($char|\\.)\'                { valueTokenize TokChar }
   \"($stringChar|\\.)*\"         { valueTokenize TokString }
 
-  -- Special
+  -- Assignment Operators
+  "//="                          { simpleTokenize TokFloorDivAssign }
+  "**="                          { simpleTokenize TokPowAssign }
+  "+="                           { simpleTokenize TokAddAssign }
+  "-="                           { simpleTokenize TokSubAssign }
+  "*="                           { simpleTokenize TokMulAssign }
+  "/="                           { simpleTokenize TokDivAssign }
+  "%="                           { simpleTokenize TokModAssign }
+  "&="                           { simpleTokenize TokBinAndAssign }
+  "|="                           { simpleTokenize TokBinOrAssign }
+  "^="                           { simpleTokenize TokBinXorAssign }
+  "<<="                          { simpleTokenize TokBinLShiftAssign }
+  ">>="                          { simpleTokenize TokBinRShiftAssign }
   "="                            { simpleTokenize TokAssign }
-  "\\"                           { simpleTokenize TokEscape }
-  "."                            { simpleTokenize TokDot }
-  ","                            { simpleTokenize TokComma }
-  ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
-  ";"                            { simpleTokenize TokSemiColon }
 
   -- Brackets
   "("                            { simpleTokenize TokLBrack }
   ")"                            { simpleTokenize TokRBrack }
-  "["                            { simpleTokenize TokLSQBrack }
-  "]"                            { simpleTokenize TokRSQBrack }
+  "["                            { simpleTokenize TokLSqBrack }
+  "]"                            { simpleTokenize TokRSqBrack }
   "{"                            { simpleTokenize TokLCBrack }
   "}"                            { simpleTokenize TokRCBrack }
 
@@ -47,28 +54,35 @@ tokens :-
   "||"                           { simpleTokenize TokOr }
 
   -- Comparison Operators
-  "=="                           { simpleTokenize TokEQ }
-  "!="                           { simpleTokenize TokNEQ }
-  "<="                           { simpleTokenize TokLTE }
-  "<"                            { simpleTokenize TokLT }
-  ">="                           { simpleTokenize TokGTE }
-  ">"                            { simpleTokenize TokGT }
+  "=="                           { simpleTokenize TokEq }
+  "!="                           { simpleTokenize TokNeq }
+  "<="                           { simpleTokenize TokLte }
+  "<"                            { simpleTokenize TokLt }
+  ">="                           { simpleTokenize TokGte }
+  ">"                            { simpleTokenize TokGt }
 
   -- Arithmetic Operators
   "//"                           { simpleTokenize TokFloorDiv }
-  "**"                           { simpleTokenize TokPower }
-  "+"                            { simpleTokenize TokPlus }
-  "-"                            { simpleTokenize TokMinus }
-  "*"                            { simpleTokenize TokMultiply }
-  "/"                            { simpleTokenize TokDivision }
-  "%"                            { simpleTokenize TokModulo }
+  "**"                           { simpleTokenize TokPow }
+  "+"                            { simpleTokenize TokAdd }
+  "-"                            { simpleTokenize TokSub }
+  "*"                            { simpleTokenize TokMul }
+  "/"                            { simpleTokenize TokDiv }
+  "%"                            { simpleTokenize TokMod }
 
   -- Binary Operators 
-  "&"                            { simpleTokenize TokBinAND }
-  "|"                            { simpleTokenize TokBinOR }
-  "^"                            { simpleTokenize TokBinXOR }
+  "&"                            { simpleTokenize TokBinAnd }
+  "|"                            { simpleTokenize TokBinOr }
+  "^"                            { simpleTokenize TokBinXor }
   "<<"                           { simpleTokenize TokBinLShift }
   ">>"                           { simpleTokenize TokBinRShift }
+
+  -- Special
+  "\\"                           { simpleTokenize TokEscape }
+  "."                            { simpleTokenize TokDot }
+  ","                            { simpleTokenize TokComma }
+  ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
+  ";"                            { simpleTokenize TokSemiColon }
 
   -- Identifier / Keywords (check identTokenize)
   [_ $alpha] [$alpha $digit _]*  { identTokenize }
