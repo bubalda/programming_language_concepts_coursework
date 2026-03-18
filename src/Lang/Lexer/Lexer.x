@@ -107,6 +107,18 @@ tokens :-
 -- terminal ',' is unused
 -- terminal 'fun' is unused
 -- terminal '.' is unused
+-- terminal '++' is unused
+-- terminal '--' is unused
+
+-- Rq
+-- Addition (+), Subtraction (-), Multiplication (*),Division (/), Modulo (%)
+-- sqrt, cbrt, pow, exp, square, cube, exp10
+-- sin, cos, tan, asin, acos, atan, atan2, sec, csc,
+-- cot, versin, exsec
+-- ln, log10, log2, log (general), log1p
+-- fact, fact2, comb, perm, gcd, lcm, fib, gamma
+-- mean, median, mode, sum, product, min, max, stddev
+-- sinh, cosh, tanh, csch, sech, coth, asinh, acosh
 
 {
 -- Tokenize Keywords and Identifier
