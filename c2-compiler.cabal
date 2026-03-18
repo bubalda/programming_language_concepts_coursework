@@ -28,9 +28,11 @@ library
       CLI.Args
       Lang.Eval.Errors
       Lang.Eval.Eval
+      Lang.Eval.Op
       Lang.Eval.Print
       Lang.Eval.Types
       Lang.Lexer.Helper
+      Lang.Lexer.Keywords
       Lang.Lexer.Lexer
       Lang.Lexer.Tokens
       Lang.Parser.Expr

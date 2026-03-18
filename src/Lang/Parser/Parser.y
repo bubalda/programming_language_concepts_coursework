@@ -3,7 +3,7 @@
 module Lang.Parser.Parser (runParser) where
 import Lang.Lexer.Tokens (Token(..), TokenType(..), TokenPos(..))
 import Lang.Parser.Helper (parserIgnore, formatRenderError)
-import Lang.Parser.Expr (Expr(..), Stmt(..))
+import Lang.Parser.Expr (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator(..))
 import Lang.Repl.Helper (formatPos)
 }
 
@@ -14,18 +14,13 @@ import Lang.Repl.Helper (formatPos)
 
 %token
   -- Constants and Literals
-  'null'                         { Token TokNull            _ }
+  null                           { Token TokNull            _ }
   bool                           { Token (TokBool $$)       _ }
   int                            { Token (TokInt $$)        _ }
   float                          { Token (TokFloat $$)      _ }
   char                           { Token (TokChar $$)       _ }
   string                         { Token (TokString $$)     _ }
-
-  -- Static type declaration
-  type                           { Token (TokType $$)       _ }
-
-  -- Identifier
-  ident                          { Token (TokIdent $$)      _ }
+  ident                          { Token (TokIdent $$)      _ } -- Identifier / Variable / Functions
   
   -- Assignment Operators
   '+='                           { Token TokAddAssign       _ }
@@ -80,7 +75,7 @@ import Lang.Repl.Helper (formatPos)
   '<<'                           { Token TokBinLShift       _ }
   '>>'                           { Token TokBinRShift       _ }
 
-  -- Control Structures Variables`
+  -- Control Structures Variables
   'if'                           { Token TokIf              _ }
   'then'                         { Token TokThen            _ }
   'else'                         { Token TokElse            _ }
@@ -88,68 +83,9 @@ import Lang.Repl.Helper (formatPos)
   'in'                           { Token TokIn              _ }
   'for'                          { Token TokFor             _ }
   'while'                        { Token TokWhile           _ }
-  'switch'                       { Token TokWhile           _ }
-  'case'                         { Token TokWhile           _ }
+  'switch'                       { Token TokSwitch          _ }
+  'case'                         { Token TokCase            _ }
 
-  -- Hyperbolic Functions
-  'sinh'                         { Token TokSinh            _ }
-  'cosh'                         { Token TokCosh            _ }
-  'tanh'                         { Token TokTanh            _ }
-  'csch'                         { Token TokCsch            _ }
-  'sech'                         { Token TokSech            _ }
-  'coth'                         { Token TokCoth            _ }
-  'asinh'                        { Token TokAsinh           _ }
-  'acosh'                        { Token TokAcosh           _ }
-
-  -- Statistical Functions
-  'mean'                         { Token TokMean            _ } 
-  'median'                       { Token TokMedian          _ } 
-  'mode'                         { Token TokMode            _ } 
-  'sum'                          { Token TokSum             _ } 
-  'product'                      { Token TokProduct         _ } 
-  'min'                          { Token TokMin             _ } 
-  'max'                          { Token TokMax             _ } 
-  'stddev'                       { Token TokStddev          _ } 
-
-  -- Power and Root Functions
-  'sqrt'                         { Token TokSqrt            _ } 
-  'cbrt'                         { Token TokCbrt            _ } 
-  'pow'                          { Token TokPow             _ } 
-  'exp'                          { Token TokExp             _ } 
-  'square'                       { Token TokSquare          _ } 
-  'cube'                         { Token TokCube            _ } 
-  'exp10'                        { Token TokExp10           _ } 
-
-  -- Trigonometric Functions
-  'sin'                          { Token TokSin             _ } 
-  'cos'                          { Token TokCos             _ } 
-  'tan'                          { Token TokTan             _ } 
-  'asin'                         { Token TokAsin            _ } 
-  'acos'                         { Token TokAcos            _ } 
-  'atan'                         { Token TokAtan            _ } 
-  'atan2'                        { Token TokAtan2           _ } 
-  'sec'                          { Token TokSec             _ } 
-  'csc'                          { Token TokCsc             _ } 
-  'cot'                          { Token TokCot             _ } 
-  'versin'                       { Token TokVersin          _ } 
-  'exsec'                        { Token TokExsec           _ } 
-
-  -- Logarithmic Functions
-  'ln'                           { Token TokLn              _ } 
-  'log10'                        { Token TokLog10           _ } 
-  'log2'                         { Token TokLog2            _ } 
-  'log'                          { Token TokLog             _ } 
-  'log1p'                        { Token TokLog1p           _ } 
-
-  -- Combinatorial Functions
-  'fact'                         { Token TokFact            _ } 
-  'fact2'                        { Token TokFact2           _ } 
-  'comb'                         { Token TokComb            _ } 
-  'perm'                         { Token TokPerm            _ } 
-  'gcd'                          { Token TokGcd             _ } 
-  'lcm'                          { Token TokLcm             _ } 
-  'fib'                          { Token TokFib             _ } 
-  'gamma'                        { Token TokGamma           _ } 
 
 -- https://en.cppreference.com/w/c/language/operator_precedence.html
 -- https://haskell-happy.readthedocs.io/en/latest/using.html#context-dependent-precedence
@@ -167,8 +103,7 @@ import Lang.Repl.Helper (formatPos)
 %left '*' '**' '/' '//' '%'       -- 3 + 4 * 5 => 3 + (4 * 5)
 %right NOT
 %left NEG
-%nonassoc 'if'
-%nonassoc 'else'
+%nonassoc 'if' 'then' 'else'
 
 %%
 
@@ -183,21 +118,14 @@ Stmts
   | Stmt                                        { [$1] }
 
 Stmt
-  : 'if' '(' Expr ')' Block ElseBlock           { If $3 $5 $6 }                       -- if (cond) {doIf} else if (cond2) {doElif} else {doElse}
+  : 'if' '(' Expr ')' Block ElseBlock           { If $3 $5 $6 }                       -- if cond then doIf else doElse
   | 'for' '(' Stmt ';' Expr ';' Stmt ')' Block  { For $3 $5 $7 $9 }                   -- for (start; step; stop) {doFor}
-  | 'while' '(' Expr ')' Block                  { While $3 $5 }                       -- while 
-  | type ident '=' Expr                         { AssignWithType $1 $2 $4 }           -- double x = "hello" => Error "Could not assign string "hello" to type "double""
+  | 'while' '(' Expr ')' Block                  { While $3 $5 }                       -- while (cond) {doWhile}
+  -- | 'switch' Expr CaseBlock                  { While $3 $5 }                       -- switch x: case 1:
+
   | ident '=' Expr                              { Assign $1 $3 }                      -- x = 10 (Dynamic read type)
-  | ident '+=' Expr                             { Assign $1 (Add       (Var $1) $3) } -- x = x + y
-  | ident '-=' Expr                             { Assign $1 (Sub       (Var $1) $3) } -- x = x - y
-  | ident '*=' Expr                             { Assign $1 (Mul       (Var $1) $3) } -- x = x * y
-  | ident '/=' Expr                             { Assign $1 (Div       (Var $1) $3) } -- x = x / y
-  | ident '%=' Expr                             { Assign $1 (Mod       (Var $1) $3) } -- x = x % y
-  | ident '&=' Expr                             { Assign $1 (BinAnd    (Var $1) $3) } -- x = x & y
-  | ident '|=' Expr                             { Assign $1 (BinOr     (Var $1) $3) } -- x = x | y
-  | ident '^=' Expr                             { Assign $1 (BinXor    (Var $1) $3) } -- x = x ^ y
-  | ident '<<=' Expr                            { Assign $1 (BinLShift (Var $1) $3) } -- x = x << y
-  | ident '>>=' Expr                            { Assign $1 (BinRShift (Var $1) $3) } -- x = x >> y
+  | ident AssignOp Expr                         { AssignOp $2 $1 $3 }                 -- x += 10, x *= 6 etc.
+  | ident '(' Args ')'                          { Call $1 $3 }                        -- sin(x)
   | Expr                                        { ExprStmt $1 }                       -- x
 
 Block
@@ -210,90 +138,61 @@ ElseBlock
   | 'else' Stmt                                 { Just [$2] } -- else if | else do1;
   |                                             { Nothing }   -- else {}
 
+Args
+  : Expr                                        { [$1] }      -- One / Last Param
+  | Expr ',' Args                               { $1 : $3 }   -- >1 Params
+  |                                             { [] }        -- No params
+
 Expr
-  : Expr '||' Expr                              { Or $1 $3 }          -- x || y      
-  | Expr '&&' Expr                              { And $1 $3 }         -- x && y
-  | Expr '|' Expr                               { BinOr  $1 $3 }      -- x | y
-  | Expr '^' Expr                               { BinXor $1 $3 }      -- x ^ y
-  | Expr '&' Expr                               { BinAnd $1 $3 }      -- x & y
-  | Expr '==' Expr                              { Eq $1 $3 }          -- x == y
-  | Expr '!=' Expr                              { Neq $1 $3 }         -- x != y
-  | Expr '<=' Expr                              { Lte $1 $3 }         -- x <= y
-  | Expr '<' Expr                               { Lt $1 $3 }          -- x < y
-  | Expr '>=' Expr                              { Gte $1 $3 }         -- x >= y
-  | Expr '>' Expr                               { Gt $1 $3 }          -- x > y
-  | Expr '*' Expr                               { Mul $1 $3 }         -- x * y
-  | Expr '/' Expr                               { Div $1 $3 }         -- x / y
-  | Expr '%' Expr                               { Mod $1 $3 }         -- x % y
-  | Expr '<<' Expr                              { BinLShift $1 $3 }   -- x << y
-  | Expr '>>' Expr                              { BinRShift $1 $3 }   -- x >> y
-  | Expr '+' Expr                               { Add $1 $3 }         -- x + y
-  | Expr '-' Expr                               { Sub $1 $3 }         -- x - y
+  : Expr '+' Expr   { BinOp Add       $1 $3} -- x + y
+  | Expr '-' Expr   { BinOp Sub       $1 $3} -- x - y
+  | Expr '*' Expr   { BinOp Mul       $1 $3} -- x * y
+  | Expr '/' Expr   { BinOp Div       $1 $3} -- x / y
+  | Expr '%' Expr   { BinOp Mod       $1 $3} -- x % y
+  | Expr '&' Expr   { BinOp BinAnd    $1 $3} -- x & y
+  | Expr '|' Expr   { BinOp BinOr     $1 $3} -- x | y
+  | Expr '^' Expr   { BinOp BinXor    $1 $3} -- x ^ y
+  | Expr '<<' Expr  { BinOp BinLShift $1 $3} -- x << y
+  | Expr '>>' Expr  { BinOp BinRShift $1 $3} -- x >> y
+  | Expr '==' Expr  { BinOp Eq        $1 $3} -- x == y
+  | Expr '!=' Expr  { BinOp Neq       $1 $3} -- x != y
+  | Expr '<=' Expr  { BinOp Lte       $1 $3} -- x <= y
+  | Expr '<' Expr   { BinOp Lt        $1 $3} -- x < y
+  | Expr '>=' Expr  { BinOp Gte       $1 $3} -- x >= y
+  | Expr '>' Expr   { BinOp Gt        $1 $3} -- x > y
+  | Expr '&&' Expr  { BinOp And       $1 $3} -- x && y
+  | Expr '||' Expr  { BinOp Or        $1 $3} -- x || y
   
-  | 'sinh' Expr                                 { Sinh    $2    } -- sinh x
-  | 'cosh' Expr                                 { Cosh    $2    } -- cosh x
-  | 'tanh' Expr                                 { Tanh    $2    } -- tanh x
-  | 'csch' Expr                                 { Csch    $2    } -- csch x
-  | 'sech' Expr                                 { Sech    $2    } -- sech x
-  | 'coth' Expr                                 { Coth    $2    } -- coth x
-  | 'asinh' Expr                                { Asinh   $2    } -- asinh x
-  | 'acosh' Expr                                { Acosh   $2    } -- acosh x 
-  | 'mean' Expr                                 { Mean    $2    } -- average [x]
-  | 'median' Expr                               { Median  $2    } -- median [x]
-  | 'mode' Expr                                 { Mode    $2    } -- mode [x]
-  | 'sum' Expr                                  { Sum     $2    } -- foldr (+) [x]
-  | 'product' Expr                              { Product $2    } -- foldr (*) [x]
-  | 'min' Expr                                  { Min     $2    } -- min [x]
-  | 'max' Expr                                  { Max     $2    } -- max [x]
-  | 'stddev' Expr                               { Stddev  $2    } -- std [x]
-  | 'sqrt' Expr                                 { Sqrt    $2    } -- x^(1/2)
-  | 'cbrt' Expr                                 { Cbrt    $2    } -- x^(1/3)
-  | 'pow' Expr Expr                             { Pow     $2 $3 } -- x^n
-  | 'exp' Expr                                  { Exp     $2    } -- e^x
-  | 'square' Expr                               { Square  $2    } -- x^2
-  | 'cube' Expr                                 { Cube    $2    } -- x^3
-  | 'exp10' Expr                                { Exp10   $2    } -- 10^x
-  | 'sin' Expr                                  { Sin     $2    } -- sin x 
-  | 'cos' Expr                                  { Cos     $2    } -- cos x
-  | 'tan' Expr                                  { Tan     $2    } -- tan x
-  | 'asin' Expr                                 { Asin    $2    } -- asin x
-  | 'acos' Expr                                 { Acos    $2    } -- acos x
-  | 'atan' Expr                                 { Atan    $2    } -- atan x
-  | 'atan2' Expr Expr                           { Atan2   $2 $3 } -- atan2 x y
-  | 'sec' Expr                                  { Sec     $2    } -- sec x 
-  | 'csc' Expr                                  { Csc     $2    } -- csc x 
-  | 'cot' Expr                                  { Cot     $2    } -- cot x 
-  | 'versin' Expr                               { Versin  $2    } -- versin x 
-  | 'exsec' Expr                                { Exsec   $2    } -- exsec x 
-  | 'ln' Expr                                   { Ln      $2    } -- ln x
-  | 'log10' Expr                                { Log10   $2    } -- log10 x
-  | 'log2' Expr                                 { Log2    $2    } -- log2 x
-  | 'log' Expr                                  { Log     $2    } -- log x
-  | 'log1p' Expr                                { Log1p   $2    } -- log1p x
-  | 'fact' Expr                                 { Fact    $2    } -- fact x
-  | 'fact2' Expr                                { Fact2   $2    } -- factSquared x
-  | 'comb' Expr Expr                            { Comb    $2 $3 } -- comb r n 
-  | 'perm' Expr Expr                            { Perm    $2 $3 } -- perm r n 
-  | 'gcd' Expr                                  { Gcd     $2    } -- gcd [x] 
-  | 'lcm' Expr                                  { Lcm     $2    } -- lcm [x]
-  | 'fib' Expr                                  { Fib     $2    } -- fib x
-  | 'gamma' Expr                                { Gamma   $2    } -- gamma x
-  
-  | '(' Expr ')'                                { Brack $2 }      -- Precedence
-  | '[' Expr ']'                                { SqBrack $2 }    -- List
+  | '(' Expr ')'                                { $2 }             -- Precedence
+  | '[' Expr ']'                                { SqBrack $2 }     -- List
   
   | '!' Expr %prec NOT                          { Not $2 }        -- Not bool
   | '-' Expr %prec NEG                          { Negate $2 }     -- Negate int/float
   
-  | 'null'                                      { NullLit }
+  -- Type of values
+  | null                                        { NullLit }
   | int                                         { IntLit $1 }
   | char                                        { CharLit $1 }
   | bool                                        { BoolLit $1 }
   | float                                       { FloatLit $1 }
   | string                                      { StringLit $1 }
-
+  
   | ident                                       { Var $1 }        -- Identifier
 
+
+-- Couple logic together since resulting output for BNF is similar
+-- Generate eval logic at eval
+AssignOp
+  : '+='   { AddEq }
+  | '-='   { SubEq }
+  | '*='   { MulEq }
+  | '/='   { DivEq }
+  | '%='   { ModEq }
+  | '&='   { BinAndEq }
+  | '|='   { BinOrEq }
+  | '^='   { BinXorEq }
+  | '<<='  { BinLShiftEq }
+  | '>>='  { BinRShiftEq }
 
 {
 -- Show error when parsing, check if you initialized it in the parser

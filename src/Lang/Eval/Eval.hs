@@ -1,12 +1,12 @@
 module Lang.Eval.Eval (evalExpr, evalStmt, runEval) where
 
 import Control.Monad.Except (runExceptT, throwError)
-import Data.Bits (Bits (shiftL, shiftR, xor), (.&.), (.|.))
 import Data.Functor.Identity (Identity (runIdentity))
 import qualified Data.Map as Map
-import Lang.Eval.Types (EvalM, ProgramEnv, Value(..))
-import Lang.Parser.Expr (Expr(..), Stmt(..))
-import Lang.Eval.Errors (expectVInt, expectVBool)
+import Lang.Eval.Errors (expectVBool, expectVInt)
+import Lang.Eval.Types (EvalM, ProgramEnv, Value (..))
+import Lang.Parser.Expr (Expr (..), Stmt (..), TwoExprOperator (..))
+import Lang.Eval.Op (applyAssignOp, calcBinOp)
 
 runEval :: EvalM a -> Either String a
 runEval ev = runIdentity (runExceptT ev)
@@ -17,105 +17,66 @@ evalStmt env stmt =
     ExprStmt e -> do
       val <- evalExpr env e
       return (env, val)
+
     Assign name expr -> do
       val <- evalExpr env expr
       let env' = Map.insert name val env
       return (env', val)
-    s -> throwError $ "ERROR: Function `"++ show s ++ "` is not implemented"
+    
+    AssignOp op name expr -> do
+      val <- evalExpr env expr
+      old <- case Map.lookup name env of
+        Just v -> return v
+        Nothing -> throwError ("Undefined identifier: " ++ name)
 
+      -- Apply calculation and assignment
+      result <- applyAssignOp op old val
+      let env' = Map.insert name result env in return (env', result)
+
+    -- Not implemented error
+    s -> throwError $ "ERROR: Function `" ++ show s ++ "` is not defined"
 
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
 evalExpr env expr =
   case expr of
-    IntLit n -> return $ VInt n
-    CharLit n -> return $ VChar n
-    BoolLit n -> return $ VBool n
-    FloatLit n -> return $ VFloat n
-    StringLit n -> return $ VString n
     NullLit -> return VNull
+    BoolLit n -> return $ VBool n
+    IntLit n -> return $ VInt n
+    FloatLit n -> return $ VFloat n
+    CharLit n -> return $ VChar n
+    StringLit n -> return $ VString n
     Var v ->
       case Map.lookup v env of
         Just val -> return val
         Nothing -> throwError ("Undefined identifier: " ++ v)
-
-    Brack a -> eval a
     SqBrack a -> eval a
-    CBrack a -> eval a
-
-    Add a b -> arithOpInt (+) a b
-    Sub a b -> arithOpInt (-) a b
-    Mul a b -> arithOpInt (*) a b
-    Div a b -> arithOpInt div a b
-    Mod a b -> arithOpInt mod a b
-    Pow a b -> arithOpInt (^) a b
-
+    
+    BinOp And a b -> logicOpLazy False a b
+    BinOp Or a b -> logicOpLazy True a b
+    BinOp op a b -> do
+      va <- eval a
+      vb <- eval b
+      calcBinOp op va vb
+    
     Negate a -> do
       x <- eInt a
       return $ VInt (-x)
-
-    Eq a b -> do
-      va <- eval a
-      vb <- eval b
-      return $ VBool (va == vb)
-
-    Neq a b -> do
-      va <- eval a
-      vb <- eval b
-      return $ VBool (va /= vb)
-
-    Lte a b -> cmpOpInt (<=) a b
-    Lt a b -> cmpOpInt (<) a b
-    Gte a b -> cmpOpInt (>=) a b
-    Gt a b -> cmpOpInt (>) a b
-
-    BinAnd a b -> bitOp (.&.) a b
-    BinOr a b -> bitOp (.|.) a b
-    BinXor a b -> bitOp xor a b
-    BinLShift a b -> bitOp shiftL a b
-    BinRShift a b -> bitOp shiftR a b
-
-    -- Lazy evaluation of and / or
-    And a b -> do
-      va <- eBool a
-      case va of
-        False -> return $ VBool False
-        True -> do
-          vb <- eBool b
-          case vb of
-            vb -> return $ VBool vb
-
-    Or a b -> do
-      va <- eBool a
-      case va of
-        True -> return $ VBool True
-        False -> do
-          vb <- eBool b
-          case vb of
-            vb -> return $ VBool vb
-
     Not a -> do
       va <- eBool a
       return $ VBool (not (va))
-
-    s -> throwError $ "Function `"++ show s ++ "` is not implemented"
-
+    s -> throwError $ "Function `" ++ show s ++ "` is not defined"
   where
-    -- Shortcut Helpers
-    arithOpInt f a b = do
-      x <- eInt a
-      y <- eInt b
-      return $ VInt (f x y)
-
-    cmpOpInt f a b = do
-      x <- eInt a
-      y <- eInt b
-      return $ VBool (f x y)
-
-    bitOp f a b = do
-      x <- eInt a
-      y <- eInt b
-      return $ VInt (f x y)
-
+    -- Evaluation
     eval = evalExpr env
     eInt e = eval e >>= expectVInt
     eBool e = eval e >>= expectVBool
+
+    -- Lazy evaluation of and | or 
+    -- Example: true || 'hello' => true (Since LHS is true, 'hello' is not evaluated)
+    logicOpLazy retEarly a b = do
+      va <- eBool a
+      if va == retEarly 
+        then return (VBool retEarly) 
+        else eval b
+
+

@@ -21,7 +21,6 @@ data TokenType
   = TokEOF            -- End of program
   | TokError String   -- Error handled by lexer
   | TokIdent String   -- Variable names
-  | TokType String    -- Static type declaration
 
   -- Comments
   | TokLComment | TokRComment

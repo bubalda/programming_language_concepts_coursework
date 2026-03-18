@@ -6,12 +6,12 @@ import Data.Functor.Identity (Identity)
 type ProgramEnv = Map.Map String Value
 
 data Value
-  = VInt Int
+  = VNull
+  | VInt Int
   | VBool Bool
-  | VChar Char
   | VFloat Float
+  | VChar Char
   | VString String
-  | VNull
   deriving (Show, Eq)
 
 type EvalM = ExceptT String Identity

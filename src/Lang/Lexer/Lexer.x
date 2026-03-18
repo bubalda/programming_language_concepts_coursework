@@ -97,103 +97,32 @@ tokens :-
 
 {
 identTokenize :: AlexInput -> Int -> Alex Token
-identTokenize inp@(_, _, _, str) len = tokenize (\_ -> identifier (take len str)) inp len
+identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) inp len
   where
-    identifier :: String -> TokenType
-    identifier s =
-      case s of
-        -- Constants and Literals
-        "pi"      -> TokFloat pi
-        "null"    -> TokNull
-        "true"    -> TokBool True
-        "false"   -> TokBool False
+    -- Check for matched string using `case of` instead of alex lexer
+    -- to prevent incorrect matches like "sinh" => "sin" + "h" due to
+    -- code writing errors
+    getToken :: String -> TokenType
+    getToken s = case s of
+      -- Constants and Literals
+      "pi"      -> TokFloat pi
+      "null"    -> TokNull
+      "true"    -> TokBool True
+      "false"   -> TokBool False
 
-        -- Static type declaration
-        "bool"     -> TokType s
-        "null"     -> TokType s
-        "int"      -> TokType s
-        "float"    -> TokType s
-        "char"     -> TokType s
-        "str"      -> TokType s
+      -- Control Structures Variables
+      "if"      -> TokIf
+      "then"    -> TokThen
+      "else"    -> TokElse
+      "let"     -> TokLet
+      "in"      -> TokIn
+      "for"     -> TokFor
+      "while"   -> TokWhile
+      "switch"  -> TokSwitch
+      "case"    -> TokCase
 
-          -- -- List Operations
-          -- List literals
-          -- Ranges
-          -- List indexing
-          -- List length
-
-        -- Control Structures Variables
-        "if"      -> TokIf
-        "then"    -> TokThen
-        "else"    -> TokElse
-        "let"     -> TokLet
-        "in"      -> TokIn
-        "for"     -> TokFor
-        "while"   -> TokWhile
-        "switch"  -> TokSwitch
-        "case"    -> TokCase
-
-        -- Hyperbolic Functions
-        "sinh"    -> TokSinh
-        "cosh"    -> TokCosh
-        "tanh"    -> TokTanh
-        "csch"    -> TokCsch
-        "sech"    -> TokSech
-        "coth"    -> TokCoth
-        "asinh"   -> TokAsinh
-        "acosh"   -> TokAcosh
-
-        -- Statistical Functions
-        "mean"    -> TokMean
-        "median"  -> TokMedian
-        "mode"    -> TokMode
-        "sum"     -> TokSum
-        "product" -> TokProduct
-        "min"     -> TokMin
-        "max"     -> TokMax
-        "stddev"  -> TokStddev
-
-        -- Power and Root Functions
-        "sqrt"    -> TokSqrt
-        "cbrt"    -> TokCbrt
-        "pow"     -> TokPow
-        "exp"     -> TokExp
-        "square"  -> TokSquare
-        "cube"    -> TokCube
-        "exp10"   -> TokExp10
-        
-        -- Trigonometric Functions
-        "sin"     -> TokSin
-        "cos"     -> TokCos
-        "tan"     -> TokTan
-        "asin"    -> TokAsin
-        "acos"    -> TokAcos
-        "atan"    -> TokAtan
-        "atan2"   -> TokAtan2
-        "sec"     -> TokSec
-        "csc"     -> TokCsc
-        "cot"     -> TokCot
-        "versin"  -> TokVersin
-        "exsec"   -> TokExsec
-
-        -- Logarithmic Functions
-        "ln"      -> TokLn
-        "log10"   -> TokLog10
-        "log2"    -> TokLog2
-        "log"     -> TokLog
-        "log1p"   -> TokLog1p
-        
-        -- Combinatorial Functions
-        "fact"    -> TokFact
-        "fact2"   -> TokFact2
-        "comb"    -> TokComb
-        "perm"    -> TokPerm
-        "gcd"     -> TokGcd
-        "lcm"     -> TokLcm
-        "fib"     -> TokFib
-        "gamma"   -> TokGamma
-
-        s         -> TokIdent s
+      -- Identifier = Variable / Function
+      s         -> TokIdent s
 
 -- End of program
 alexEOF :: Alex Token
@@ -262,3 +191,12 @@ alexInitUserState = AlexUserState
   , lexerStringValue   = ""
   }
 }
+
+
+            -- -- List Operations
+            -- List literals
+            -- Ranges
+            -- List indexing
+            -- List length
+
+      -- else if s `elem` functions then TokenIdent s 
