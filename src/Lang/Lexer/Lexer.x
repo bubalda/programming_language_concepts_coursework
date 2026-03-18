@@ -120,6 +120,10 @@ tokens :-
 -- mean, median, mode, sum, product, min, max, stddev
 -- sinh, cosh, tanh, csch, sech, coth, asinh, acosh
 
+-- Integer literals, Float literals, Boolean literals, String literals, Pi constant
+-- Control Structures Variables, Let bindings, if-then-else, sequences
+-- List Operations List literals, Ranges, List indexing, List length
+
 {
 -- Tokenize Keywords and Identifier
 identTokenize :: AlexInput -> Int -> Alex Token
