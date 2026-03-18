@@ -21,10 +21,8 @@ evalStmt env stmt =
       val <- evalExpr env expr
       let env' = Map.insert name val env
       return (env', val)
-    AssignWithType vType name expr -> throwError "ERROR: `Type assignment` method not implemented."
-    If cond ifBlock elseBlock -> throwError "ERROR: `If` method not implemented."
-    For start step stop forBlock -> throwError "ERROR: `For` method not implemented."
-    While cond whileBlock -> throwError "ERROR: `While` method not implemented."
+    s -> throwError $ "ERROR: Function `"++ show s ++ "` is not implemented"
+
 
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
 evalExpr env expr =
@@ -32,7 +30,7 @@ evalExpr env expr =
     IntLit n -> return $ VInt n
     CharLit n -> return $ VChar n
     BoolLit n -> return $ VBool n
-    DoubleLit n -> return $ VDouble n
+    FloatLit n -> return $ VFloat n
     StringLit n -> return $ VString n
     NullLit -> return VNull
     Var v ->
@@ -50,7 +48,6 @@ evalExpr env expr =
     Div a b -> arithOpInt div a b
     Mod a b -> arithOpInt mod a b
     Pow a b -> arithOpInt (^) a b
-    FloorDiv a b -> arithOpInt div a b
 
     Negate a -> do
       x <- eInt a
@@ -99,6 +96,8 @@ evalExpr env expr =
     Not a -> do
       va <- eBool a
       return $ VBool (not (va))
+
+    s -> throwError $ "Function `"++ show s ++ "` is not implemented"
 
   where
     -- Shortcut Helpers

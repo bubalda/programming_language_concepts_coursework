@@ -4,8 +4,8 @@ import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
 import Lang.Repl.Helper (formatPos)
 }
 
--- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monad-wrapper
-%wrapper "monad"
+-- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monaduserstate-wrapper
+%wrapper "monadUserState"
 
 -- https://haskell-alex.readthedocs.io/en/latest/syntax.html#lexical-syntax
 $digit       = [0-9]
@@ -27,16 +27,16 @@ tokens :-
   -- Ignore
   $white+                        ; -- As long there is one separating between tokens
   "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
+  "/*"                           { simpleTokenize TokLComment } -- Block comments
+  "*/"                           { simpleTokenize TokRComment } -- Block comments
 
   -- Literals
-  @floatnumber                   { valueTokenize TokDouble }
+  @floatnumber                   { valueTokenize TokFloat }
   $digit+                        { valueTokenize TokInt }
   \'($char|\\.)\'                { valueTokenize TokChar }
   \"($stringChar|\\.)*\"         { valueTokenize TokString }
 
   -- Assignment Operators
-  "//="                          { simpleTokenize TokFloorDivAssign }
-  "**="                          { simpleTokenize TokPowAssign }
   "+="                           { simpleTokenize TokAddAssign }
   "-="                           { simpleTokenize TokSubAssign }
   "*="                           { simpleTokenize TokMulAssign }
@@ -58,7 +58,7 @@ tokens :-
   "}"                            { simpleTokenize TokRCBrack }
 
   -- Logical Operators
-  "!"                            { simpleTokenize TokExclamation }
+  "!"                            { simpleTokenize TokNot }
   "&&"                           { simpleTokenize TokAnd }
   "||"                           { simpleTokenize TokOr }
 
@@ -71,8 +71,6 @@ tokens :-
   ">"                            { simpleTokenize TokGt }
 
   -- Arithmetic Operators
-  "//"                           { simpleTokenize TokFloorDiv }
-  "**"                           { simpleTokenize TokPow }
   "+"                            { simpleTokenize TokAdd }
   "-"                            { simpleTokenize TokSub }
   "*"                            { simpleTokenize TokMul }
@@ -89,9 +87,7 @@ tokens :-
   -- Special
   "."                            { simpleTokenize TokDot }
   ","                            { simpleTokenize TokComma }
-  ":"                            { simpleTokenize TokColon }    -- Note that repl commands also use : so add sth before that to test it
   ";"                            { simpleTokenize TokSemiColon }
-  "?"                            { simpleTokenize TokQuestion }
 
   -- Identifier / Keywords (check identTokenize)
   [_ $alpha] [$alpha $digit _]*  { identTokenize }
@@ -99,56 +95,103 @@ tokens :-
   -- Catch-all Error
   .                              { tokenize TokError }
 
--- TODO
--- terminal 'in' is unused
--- terminal ':' is unused
--- terminal '?' is unused
--- terminal '[]' is unused
--- terminal ',' is unused
--- terminal 'fun' is unused
--- terminal '.' is unused
--- terminal '++' is unused
--- terminal '--' is unused
-
--- Rq
--- Addition (+), Subtraction (-), Multiplication (*),Division (/), Modulo (%)
--- sqrt, cbrt, pow, exp, square, cube, exp10
--- sin, cos, tan, asin, acos, atan, atan2, sec, csc,
--- cot, versin, exsec
--- ln, log10, log2, log (general), log1p
--- fact, fact2, comb, perm, gcd, lcm, fib, gamma
--- mean, median, mode, sum, product, min, max, stddev
--- sinh, cosh, tanh, csch, sech, coth, asinh, acosh
-
--- Integer literals, Float literals, Boolean literals, String literals, Pi constant
--- Control Structures Variables, Let bindings, if-then-else, sequences
--- List Operations List literals, Ranges, List indexing, List length
-
 {
--- Tokenize Keywords and Identifier
 identTokenize :: AlexInput -> Int -> Alex Token
 identTokenize inp@(_, _, _, str) len = tokenize (\_ -> identifier (take len str)) inp len
   where
     identifier :: String -> TokenType
     identifier s =
       case s of
+        -- Constants and Literals
+        "pi"      -> TokFloat pi
+        "null"    -> TokNull
         "true"    -> TokBool True
         "false"   -> TokBool False
-        "null"    -> TokNull
 
+        -- Static type declaration
+        "bool"     -> TokType s
+        "null"     -> TokType s
+        "int"      -> TokType s
+        "float"    -> TokType s
+        "char"     -> TokType s
+        "str"      -> TokType s
+
+          -- -- List Operations
+          -- List literals
+          -- Ranges
+          -- List indexing
+          -- List length
+
+        -- Control Structures Variables
         "if"      -> TokIf
+        "then"    -> TokThen
         "else"    -> TokElse
-
+        "let"     -> TokLet
+        "in"      -> TokIn
         "for"     -> TokFor
         "while"   -> TokWhile
+        "switch"  -> TokSwitch
+        "case"    -> TokCase
 
-        "fun"     -> TokFunc
+        -- Hyperbolic Functions
+        "sinh"    -> TokSinh
+        "cosh"    -> TokCosh
+        "tanh"    -> TokTanh
+        "csch"    -> TokCsch
+        "sech"    -> TokSech
+        "coth"    -> TokCoth
+        "asinh"   -> TokAsinh
+        "acosh"   -> TokAcosh
 
-        "char"    -> TokType s
-        "int"     -> TokType s
-        "bool"    -> TokType s
-        "double"  -> TokType s
-        "String"  -> TokType s
+        -- Statistical Functions
+        "mean"    -> TokMean
+        "median"  -> TokMedian
+        "mode"    -> TokMode
+        "sum"     -> TokSum
+        "product" -> TokProduct
+        "min"     -> TokMin
+        "max"     -> TokMax
+        "stddev"  -> TokStddev
+
+        -- Power and Root Functions
+        "sqrt"    -> TokSqrt
+        "cbrt"    -> TokCbrt
+        "pow"     -> TokPow
+        "exp"     -> TokExp
+        "square"  -> TokSquare
+        "cube"    -> TokCube
+        "exp10"   -> TokExp10
+        
+        -- Trigonometric Functions
+        "sin"     -> TokSin
+        "cos"     -> TokCos
+        "tan"     -> TokTan
+        "asin"    -> TokAsin
+        "acos"    -> TokAcos
+        "atan"    -> TokAtan
+        "atan2"   -> TokAtan2
+        "sec"     -> TokSec
+        "csc"     -> TokCsc
+        "cot"     -> TokCot
+        "versin"  -> TokVersin
+        "exsec"   -> TokExsec
+
+        -- Logarithmic Functions
+        "ln"      -> TokLn
+        "log10"   -> TokLog10
+        "log2"    -> TokLog2
+        "log"     -> TokLog
+        "log1p"   -> TokLog1p
+        
+        -- Combinatorial Functions
+        "fact"    -> TokFact
+        "fact2"   -> TokFact2
+        "comb"    -> TokComb
+        "perm"    -> TokPerm
+        "gcd"     -> TokGcd
+        "lcm"     -> TokLcm
+        "fib"     -> TokFib
+        "gamma"   -> TokGamma
 
         s         -> TokIdent s
 
@@ -205,4 +248,17 @@ runLexer input = case runAlex input scanTokens of
       formatPos l c
       ++ "<LEXER ERROR> -- Could not tokenize string "
       ++ show s
+
+
+-- TODO Touch this on later stages
+data AlexUserState = AlexUserState
+  { lexerCommentDepth  :: Int
+  , lexerStringValue   :: String
+  }
+
+alexInitUserState :: AlexUserState
+alexInitUserState = AlexUserState
+  { lexerCommentDepth  = 0
+  , lexerStringValue   = ""
+  }
 }

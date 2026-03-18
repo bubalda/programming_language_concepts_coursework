@@ -20,6 +20,6 @@ expectVErr expectedVal inputVal =
         (VInt _) -> "Int"
         (VBool _) -> "Bool"
         (VChar _) -> "Char"
-        (VDouble _) -> "Double"
+        (VFloat _) -> "Float"
         (VString _) -> "String"
    in "Expected object with type `" ++ text expectedVal ++ "`, got type `" ++ text inputVal ++ "` instead."

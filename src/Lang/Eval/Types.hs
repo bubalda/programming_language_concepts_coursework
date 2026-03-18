@@ -9,7 +9,7 @@ data Value
   = VInt Int
   | VBool Bool
   | VChar Char
-  | VDouble Double
+  | VFloat Float
   | VString String
   | VNull
   deriving (Show, Eq)

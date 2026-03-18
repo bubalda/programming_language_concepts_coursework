@@ -11,7 +11,7 @@ printEval :: Value -> IO ()
 printEval (VBool b) = putStrLn (show b)
 printEval (VInt i) = putStrLn (show i)
 printEval (VChar v) = putStrLn (show v)
-printEval (VDouble f) = putStrLn (show f)
+printEval (VFloat f) = putStrLn (show f)
 printEval (VString s) = putStrLn s
 printEval (VNull) = putStrLn "null"
 
