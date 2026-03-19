@@ -20,7 +20,7 @@ debugFlags :: ReplFlags
 debugFlags =
   ReplFlags
     { debugMode = True,
-      showTokens = True,
+      showTokens = False, -- TODO switch this to true on submit
       showAST = True,
       prettyEval = True
     }

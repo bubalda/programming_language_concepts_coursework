@@ -4,7 +4,10 @@ module Lang.Lexer.Keywords (functions) where
 -- Should be resolved in eval stage on object `Call FunctionName [ArgsExpr]`
 functions :: [String]
 functions =
-  [ -- Hyperbolic Functions
+  [ -- List length
+    "len",
+    
+    -- Hyperbolic Functions
     "sinh",
     "cosh",
     "tanh",

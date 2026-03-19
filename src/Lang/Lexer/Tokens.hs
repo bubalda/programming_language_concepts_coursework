@@ -30,18 +30,18 @@ data TokenType
   | TokInt Int | TokFloat Float
   | TokChar Char | TokString String
 
-  -- Special characters
+  -- List
+  | TokComma | TokColon | TokDotDot
+  
+  -- End of line
   | TokSemiColon
-  | TokDot | TokComma
 
   -- Control Structures Variables
   | TokIf | TokThen | TokElse 
   | TokLet | TokIn
-  | TokFor | TokWhile                                                               
-  | TokSwitch | TokCase 
 
   -- Scoping               
-  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack | TokLCBrack | TokRCBrack
+  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack
 
   -- Logical Op
   | TokNot | TokAnd | TokOr                                                                   
@@ -53,36 +53,10 @@ data TokenType
   | TokAdd | TokSub | TokMul | TokDiv | TokMod
 
   -- Binary Arithmetic Op
-  | TokBinAnd | TokBinOr | TokBinXor | TokBinLShift | TokBinRShift                            
+  | TokBitAnd | TokBitOr | TokBitXor | TokBitLShift | TokBitRShift                            
 
   -- Operation Assignments
   | TokAssign
   | TokAddAssign | TokSubAssign | TokMulAssign | TokDivAssign | TokModAssign 
-  | TokBinAndAssign | TokBinOrAssign | TokBinXorAssign | TokBinLShiftAssign | TokBinRShiftAssign
-
-  -- Hyperbolic Functions
-  | TokSinh | TokCosh | TokTanh 
-  | TokCsch | TokSech | TokCoth 
-  | TokAsinh | TokAcosh
-
-  -- Statistical Functions
-  | TokMean | TokMedian | TokMode 
-  | TokSum | TokProduct 
-  | TokMin | TokMax | TokStddev
-
-  -- Power and Root Functions
-  | TokSqrt | TokCbrt | TokPow | TokExp | TokSquare | TokCube | TokExp10
-        
-  -- Trigonometric Functions
-  | TokSin | TokCos | TokTan 
-  | TokAsin | TokAcos | TokAtan | TokAtan2 
-  | TokSec | TokCsc | TokCot 
-  | TokVersin | TokExsec
-
-  -- Logarithmic Functions
-  | TokLn | TokLog10 | TokLog2 | TokLog | TokLog1p
-        
-  -- Combinatorial Functions
-  | TokFact | TokFact2 | TokComb | TokPerm 
-  | TokGcd | TokLcm | TokFib | TokGamma
+  | TokBitAndAssign | TokBitOrAssign | TokBitXorAssign | TokBitLShiftAssign | TokBitRShiftAssign
   deriving (Show, Eq)

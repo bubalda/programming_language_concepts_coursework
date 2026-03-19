@@ -19,11 +19,11 @@ assignToBin SubEq = Sub
 assignToBin MulEq = Mul
 assignToBin DivEq = Div
 assignToBin ModEq = Mod
-assignToBin BinAndEq = BinAnd
-assignToBin BinOrEq = BinOr
-assignToBin BinXorEq = BinXor
-assignToBin BinLShiftEq = BinLShift
-assignToBin BinRShiftEq = BinRShift
+assignToBin BitAndEq = BitAnd
+assignToBin BitOrEq = BitOr
+assignToBin BitXorEq = BitXor
+assignToBin BitLShiftEq = BitLShift
+assignToBin BitRShiftEq = BitRShift
 
 calcBinOp :: TwoExprOperator -> Value -> Value -> EvalM Value
 calcBinOp op a b =
@@ -36,11 +36,11 @@ calcBinOp op a b =
     Mod -> intBinOp mod
 
     -- Bit operations
-    BinAnd -> intBinOp (.&.)
-    BinOr -> intBinOp (.|.)
-    BinXor -> intBinOp xor
-    BinLShift -> intBinOp shiftL
-    BinRShift -> intBinOp shiftR
+    BitAnd -> intBinOp (.&.)
+    BitOr -> intBinOp (.|.)
+    BitXor -> intBinOp xor
+    BitLShift -> intBinOp shiftL
+    BitRShift -> intBinOp shiftR
 
     -- Comparison operations (TODO type check for float and allow it)
     Eq -> return $ VBool (a == b)

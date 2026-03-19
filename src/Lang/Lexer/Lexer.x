@@ -14,7 +14,7 @@ $char        = [^\'\\\n]
 $stringChar  = [^\"\\\n]
 
 -- https://gdevanla.github.io/posts/wya-lexer.html#numerical_values
-@digitpart     =  $digit([_]|$digit)*
+@digitpart     =  $digit($digit)*
 @fraction      =  [\.] @digitpart
 @pointfloat    =  (@digitpart)* @fraction | @digitpart[\.]
 @exponent      =  [eE] ([\+\-]?) @digitpart
@@ -31,7 +31,7 @@ tokens :-
   "*/"                           { simpleTokenize TokRComment } -- Block comments
 
   -- Literals
-  @floatnumber                   { valueTokenize TokFloat }
+  @floatnumber / [^\.]           { valueTokenize TokFloat }
   $digit+                        { valueTokenize TokInt }
   \'($char|\\.)\'                { valueTokenize TokChar }
   \"($stringChar|\\.)*\"         { valueTokenize TokString }
@@ -42,20 +42,23 @@ tokens :-
   "*="                           { simpleTokenize TokMulAssign }
   "/="                           { simpleTokenize TokDivAssign }
   "%="                           { simpleTokenize TokModAssign }
-  "&="                           { simpleTokenize TokBinAndAssign }
-  "|="                           { simpleTokenize TokBinOrAssign }
-  "^="                           { simpleTokenize TokBinXorAssign }
-  "<<="                          { simpleTokenize TokBinLShiftAssign }
-  ">>="                          { simpleTokenize TokBinRShiftAssign }
+  "&="                           { simpleTokenize TokBitAndAssign }
+  "|="                           { simpleTokenize TokBitOrAssign }
+  "^="                           { simpleTokenize TokBitXorAssign }
+  "<<="                          { simpleTokenize TokBitLShiftAssign }
+  ">>="                          { simpleTokenize TokBitRShiftAssign }
   "="                            { simpleTokenize TokAssign }
 
   -- Brackets
   "("                            { simpleTokenize TokLBrack }
   ")"                            { simpleTokenize TokRBrack }
+
+  -- List
   "["                            { simpleTokenize TokLSqBrack }
   "]"                            { simpleTokenize TokRSqBrack }
-  "{"                            { simpleTokenize TokLCBrack }
-  "}"                            { simpleTokenize TokRCBrack }
+  ","                            { simpleTokenize TokComma }
+  ":"                            { simpleTokenize TokColon }
+  ".."                           { simpleTokenize TokDotDot }
 
   -- Logical Operators
   "!"                            { simpleTokenize TokNot }
@@ -77,16 +80,14 @@ tokens :-
   "/"                            { simpleTokenize TokDiv }
   "%"                            { simpleTokenize TokMod }
 
-  -- Binary Operators 
-  "&"                            { simpleTokenize TokBinAnd }
-  "|"                            { simpleTokenize TokBinOr }
-  "^"                            { simpleTokenize TokBinXor }
-  "<<"                           { simpleTokenize TokBinLShift }
-  ">>"                           { simpleTokenize TokBinRShift }
+  -- Bitwise Operators 
+  "&"                            { simpleTokenize TokBitAnd }
+  "|"                            { simpleTokenize TokBitOr }
+  "^"                            { simpleTokenize TokBitXor }
+  "<<"                           { simpleTokenize TokBitLShift }
+  ">>"                           { simpleTokenize TokBitRShift }
 
-  -- Special
-  "."                            { simpleTokenize TokDot }
-  ","                            { simpleTokenize TokComma }
+  -- End of line
   ";"                            { simpleTokenize TokSemiColon }
 
   -- Identifier / Keywords (check identTokenize)
@@ -105,21 +106,17 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
     getToken :: String -> TokenType
     getToken s = case s of
       -- Constants and Literals
-      "pi"      -> TokFloat pi
-      "null"    -> TokNull
-      "true"    -> TokBool True
-      "false"   -> TokBool False
+      "pi"       -> TokFloat pi
+      "null"     -> TokNull
+      "true"     -> TokBool True
+      "false"    -> TokBool False
 
       -- Control Structures Variables
-      "if"      -> TokIf
-      "then"    -> TokThen
-      "else"    -> TokElse
-      "let"     -> TokLet
-      "in"      -> TokIn
-      "for"     -> TokFor
-      "while"   -> TokWhile
-      "switch"  -> TokSwitch
-      "case"    -> TokCase
+      "if"       -> TokIf
+      "then"     -> TokThen
+      "else"     -> TokElse
+      "let"      -> TokLet
+      "in"       -> TokIn
 
       -- Identifier = Variable / Function
       s         -> TokIdent s
@@ -191,12 +188,3 @@ alexInitUserState = AlexUserState
   , lexerStringValue   = ""
   }
 }
-
-
-            -- -- List Operations
-            -- List literals
-            -- Ranges
-            -- List indexing
-            -- List length
-
-      -- else if s `elem` functions then TokenIdent s 

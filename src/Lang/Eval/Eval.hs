@@ -49,7 +49,6 @@ evalExpr env expr =
       case Map.lookup v env of
         Just val -> return val
         Nothing -> throwError ("Undefined identifier: " ++ v)
-    SqBrack a -> eval a
     
     BinOp And a b -> logicOpLazy False a b
     BinOp Or a b -> logicOpLazy True a b

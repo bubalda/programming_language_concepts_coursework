@@ -27,5 +27,6 @@ repl replEnv = do
           | isBlankLine line -> loop rEnv -- Ignore blank lines
           | commandPrefix `isPrefixOf` line -> handleCommand loop rEnv line
           | otherwise -> do
-              rEnv' <- runLine rEnv line
+              let addEndSemiColon = if last line /= ';' then line ++ ";" else line
+              rEnv' <- runLine rEnv addEndSemiColon
               loop rEnv'
