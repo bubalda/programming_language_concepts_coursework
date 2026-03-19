@@ -17,7 +17,7 @@ import System.Exit (exitSuccess)
 
 -- Repl Prints and Checks
 replWelcome :: IO ()
-replWelcome = putStrLn $ "Use :q or EOF (Ctrl+D) to quit, and Ctrl+C to force stop the program."
+replWelcome = putStrLn $ "Welcome to C2Repl, use :? for help page.\nUse :q or EOF (Ctrl+D) to quit, and Ctrl+C to force stop the program."
 
 replPrompt :: String
 replPrompt = "c2> "

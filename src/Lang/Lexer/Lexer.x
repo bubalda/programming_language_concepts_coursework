@@ -25,77 +25,83 @@ $stringChar  = [^\"\\\n]
 -- Token matches by (Top-Down) (Long-Short)
 -- But still, place "==" before "=" to prevent reading two "=" instead of one "=="
 tokens :-
+  -- Allows nested comments
+  <0>             "/*"           { startComment }   -- <Try> if x then /* Do something */ x = 2; else doElse = 1;
+  <comment>       "/*"           { nestComment }    -- <Try> /* outside /* nested */ outside */
+  <comment>       "*/"           { endComment }
+  <comment>       .              { skip }
+  <comment>       \n             { skip }
+
   -- Ignore
-  $white+                        ; -- As long there is one separating between tokens
-  "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
-  "/*"                           { simpleTokenize TokLComment } -- Block comments
-  "*/"                           { simpleTokenize TokRComment } -- Block comments
+  <0> $white+                        ; -- As long there is one separating between tokens
+  <0> "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
+
 
   -- Literals
-  @floatnumber / [^\.]           { valueTokenize TokFloat }
-  $digit+                        { valueTokenize TokInt }
-  \'($char|\\.)\'                { valueTokenize TokChar }
-  \"($stringChar|\\.)*\"         { valueTokenize TokString }
+  <0> @floatnumber / [^\.]           { valueTokenize TokFloat }
+  <0> $digit+                        { valueTokenize TokInt }
+  <0> \'($char|\\.)\'                { valueTokenize TokChar }
+  <0> \"($stringChar|\\.)*\"         { valueTokenize TokString }
 
   -- Assignment Operators
-  "+="                           { simpleTokenize TokAddAssign }
-  "-="                           { simpleTokenize TokSubAssign }
-  "*="                           { simpleTokenize TokMulAssign }
-  "/="                           { simpleTokenize TokDivAssign }
-  "%="                           { simpleTokenize TokModAssign }
-  "&="                           { simpleTokenize TokBitAndAssign }
-  "|="                           { simpleTokenize TokBitOrAssign }
-  "^="                           { simpleTokenize TokBitXorAssign }
-  "<<="                          { simpleTokenize TokBitLShiftAssign }
-  ">>="                          { simpleTokenize TokBitRShiftAssign }
-  "="                            { simpleTokenize TokAssign }
+  <0> "+="                           { simpleTokenize TokAddAssign }
+  <0> "-="                           { simpleTokenize TokSubAssign }
+  <0> "*="                           { simpleTokenize TokMulAssign }
+  <0> "/="                           { simpleTokenize TokDivAssign }
+  <0> "%="                           { simpleTokenize TokModAssign }
+  <0> "&="                           { simpleTokenize TokBitAndAssign }
+  <0> "|="                           { simpleTokenize TokBitOrAssign }
+  <0> "^="                           { simpleTokenize TokBitXorAssign }
+  <0> "<<="                          { simpleTokenize TokBitLShiftAssign }
+  <0> ">>="                          { simpleTokenize TokBitRShiftAssign }
+  <0> "="                            { simpleTokenize TokAssign }
 
   -- List
-  "["                            { simpleTokenize TokLSqBrack }
-  "]"                            { simpleTokenize TokRSqBrack }
-  ","                            { simpleTokenize TokComma }
-  ":"                            { simpleTokenize TokColon }
-  ".."                           { simpleTokenize TokDotDot }
+  <0> "["                            { simpleTokenize TokLSqBrack }
+  <0> "]"                            { simpleTokenize TokRSqBrack }
+  <0> ","                            { simpleTokenize TokComma }
+  <0> ":"                            { simpleTokenize TokColon }
+  <0> ".."                           { simpleTokenize TokDotDot }
 
   -- Logical Operators
-  "!"                            { simpleTokenize TokNot }
-  "&&"                           { simpleTokenize TokAnd }
-  "||"                           { simpleTokenize TokOr }
+  <0> "!"                            { simpleTokenize TokNot }
+  <0> "&&"                           { simpleTokenize TokAnd }
+  <0> "||"                           { simpleTokenize TokOr }
 
   -- Comparison Operators
-  "=="                           { simpleTokenize TokEq }
-  "!="                           { simpleTokenize TokNeq }
-  "<="                           { simpleTokenize TokLte }
-  "<"                            { simpleTokenize TokLt }
-  ">="                           { simpleTokenize TokGte }
-  ">"                            { simpleTokenize TokGt }
+  <0> "=="                           { simpleTokenize TokEq }
+  <0> "!="                           { simpleTokenize TokNeq }
+  <0> "<="                           { simpleTokenize TokLte }
+  <0> "<"                            { simpleTokenize TokLt }
+  <0> ">="                           { simpleTokenize TokGte }
+  <0> ">"                            { simpleTokenize TokGt }
 
   -- Arithmetic Operators
-  "+"                            { simpleTokenize TokAdd }
-  "-"                            { simpleTokenize TokSub }
-  "*"                            { simpleTokenize TokMul }
-  "/"                            { simpleTokenize TokDiv }
-  "%"                            { simpleTokenize TokMod }
+  <0> "+"                            { simpleTokenize TokAdd }
+  <0> "-"                            { simpleTokenize TokSub }
+  <0> "*"                            { simpleTokenize TokMul }
+  <0> "/"                            { simpleTokenize TokDiv }
+  <0> "%"                            { simpleTokenize TokMod }
 
   -- Bitwise Operators 
-  "&"                            { simpleTokenize TokBitAnd }
-  "|"                            { simpleTokenize TokBitOr }
-  "^"                            { simpleTokenize TokBitXor }
-  "<<"                           { simpleTokenize TokBitLShift }
-  ">>"                           { simpleTokenize TokBitRShift }
+  <0> "&"                            { simpleTokenize TokBitAnd }
+  <0> "|"                            { simpleTokenize TokBitOr }
+  <0> "^"                            { simpleTokenize TokBitXor }
+  <0> "<<"                           { simpleTokenize TokBitLShift }
+  <0> ">>"                           { simpleTokenize TokBitRShift }
 
   -- Brackets
-  "("                            { simpleTokenize TokLBrack }
-  ")"                            { simpleTokenize TokRBrack }
+  <0> "("                            { simpleTokenize TokLBrack }
+  <0> ")"                            { simpleTokenize TokRBrack }
 
   -- End of line
-  ";"                            { simpleTokenize TokSemiColon }
+  <0> ";"                            { simpleTokenize TokSemiColon }
 
   -- Identifier / Keywords (check identTokenize)
-  [_ $alpha] [$alpha $digit _]*  { identTokenize }
+  <0> [_ $alpha] [$alpha $digit _]*  { identTokenize }
 
   -- Catch-all Error
-  .                              { tokenize TokError }
+  <0> .                              { tokenize TokError }
 
 {
 -- Tokenize words
@@ -125,7 +131,11 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
 
 -- End of program
 alexEOF :: Alex Token
-alexEOF = return $ Token TokEOF (TokenPos 0 0)
+alexEOF = do
+  s <- alexGetUserState
+  if lexerCommentDepth s > 0
+    then pure $ Token (TokError "Unclosed block comments detected, did you close it using '*/'?") (TokenPos 0 0)
+    else return $ Token TokEOF (TokenPos 0 0)
 
 -- Tokenizer
 getTokenPos :: AlexPosn -> TokenPos
@@ -160,6 +170,7 @@ runLexer input = case runAlex input scanTokens of
           tok <- alexMonadScan
           case (tokenType tok) of
             TokEOF -> return [tok]
+            TokError _ -> return [tok]
             _      -> do
               rest <- go
               return (tok : rest)
@@ -179,15 +190,39 @@ runLexer input = case runAlex input scanTokens of
 
 -- For nested comments
 data AlexUserState = AlexUserState
-  { lexerCommentDepth  :: Int
-  , lexerStringValue   :: String
-  }
+  { lexerCommentDepth  :: Int }
 
 alexInitUserState :: AlexUserState
 alexInitUserState = AlexUserState
-  { lexerCommentDepth  = 0
-  , lexerStringValue   = ""
-  }
+  { lexerCommentDepth  = 0 }
+
+-- Called on first "/*" comment block
+startComment :: AlexInput -> Int -> Alex Token
+startComment _ _ = do
+    -- Reset/Increment depth in UserState
+    s <- alexGetUserState
+    alexSetUserState (s { lexerCommentDepth = 1 })
+    alexSetStartCode comment
+    alexMonadScan
+
+-- Nest a new comment inside comment
+nestComment :: AlexInput -> Int -> Alex Token
+nestComment _ _ = do
+    s <- alexGetUserState
+    alexSetUserState (s { lexerCommentDepth = lexerCommentDepth s + 1 })
+    alexMonadScan
+
+-- End one level of comment block using "*/"
+endComment :: AlexInput -> Int -> Alex Token
+endComment _ _ = do
+    s <- alexGetUserState
+    let newDepth = lexerCommentDepth s - 1
+    alexSetUserState (s { lexerCommentDepth = newDepth })
+    if newDepth == 0 
+      then alexSetStartCode 0 
+      else alexSetStartCode comment
+    alexMonadScan -- looks for the next token after end comment
+
 }
 
--- What is sequences? Waiting for lecturer's reply
+-- TODO What is sequences? Waiting for reply

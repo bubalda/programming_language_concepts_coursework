@@ -18,6 +18,9 @@ import System.Exit (exitSuccess)
 -- 3. 我想把 commandPrefix 和 handleCommand 帮我连在一起， 像是 commandPrefix ++ "debug" => :debug，
 --    但是在 runtime 做的话会很费 time/space, 所以可以在程序开始时就直接 init 一个 List / Map 
 --    来存取那些 command 吗？
+-- 4. 现在的话如果输入 x = 10 eval 会 print x 的 value，不过可以不让他这样做吗？
+--    就是让 x = 7; x += 1; x *= 2; x 这整段只返回一行 16
+--    然后 x = 7; x += 1; x *= 2;     什么都不返回，因为 x 才会触发 print
 
 -- Debug mode also switches :tokens and :ast to true
 handleCommand :: (ReplEnv -> InputT IO ()) -> ReplEnv -> String -> InputT IO ()

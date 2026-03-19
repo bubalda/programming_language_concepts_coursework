@@ -22,9 +22,6 @@ data TokenType
   | TokError String   -- Error handled by lexer
   | TokIdent String   -- Variable names
 
-  -- Comments
-  | TokLComment | TokRComment
-  
   -- Values
   | TokBool Bool | TokNull
   | TokInt Int | TokFloat Float

@@ -22,17 +22,21 @@ runLine rEnv line = do
     Right tokens -> do
       -- Show read tokens. Hide / Display this by setting flag ":tokens on/off"
       when ((showTokens . replFlags) rEnv) $ liftIO $ printTokens tokens
-
-      -- Parse --
-      case runParser line tokens of
-        Left err -> errReturn err rEnv -- Parse error
-        Right stmts -> do
-          when ((showAST . replFlags) rEnv) $ liftIO $ printAST stmts
-          evalLoop rEnv stmts 1
+      
+      -- Tokens will always have TokEOF so for [Tokens] not to be empty for parsing this must be done
+      if (length tokens < 2)  
+        then return rEnv
+        else 
+          -- Parse --
+          case runParser line tokens of
+            Left err -> errReturn err rEnv -- Parse error
+            Right stmts -> do
+              when ((showAST . replFlags) rEnv) $ liftIO $ printAST stmts
+              evalLoop rEnv stmts 1
   where
     -- Show error, and reprompt a new line with current env
     errReturn :: String -> ReplEnv -> InputT IO ReplEnv
-    errReturn err env = putStrLnRepl err >> return env
+    errReturn err rEnv = putStrLnRepl err >> return rEnv
 
     -- Evaluate --
     evalLoop :: ReplEnv -> [Stmt] -> Int -> InputT IO ReplEnv

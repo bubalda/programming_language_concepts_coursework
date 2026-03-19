@@ -1,4 +1,4 @@
-# c2-compiler
+# Coursework
 
 1. Install external deps 
 ```sh
@@ -16,3 +16,5 @@ stack run -- --debug
 - And restart intellisense
 
 4. Check Lang.Lexer.Keywords for available functions
+
+5. SemiColons are line delimiters (;) to support one-liners
