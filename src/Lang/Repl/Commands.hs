@@ -12,6 +12,13 @@ import Lang.Repl.Helper (putStrLnRepl, uppercase, wrapSection)
 import System.Console.Haskeline (InputT)
 import System.Exit (exitSuccess)
 
+-- TODO @jinyi
+-- 1. 现在你看内个 handleCommand 的 case 里面几乎每个 command 都有两行 (setFlag / showFlag), 可以把他们浓缩成一行吗？
+-- 2. 那个 help page (:?) 需要写一下
+-- 3. 我想把 commandPrefix 和 handleCommand 帮我连在一起， 像是 commandPrefix ++ "debug" => :debug，
+--    但是在 runtime 做的话会很费 time/space, 所以可以在程序开始时就直接 init 一个 List / Map 
+--    来存取那些 command 吗？
+
 -- Debug mode also switches :tokens and :ast to true
 handleCommand :: (ReplEnv -> InputT IO ()) -> ReplEnv -> String -> InputT IO ()
 handleCommand loop rEnv line = do

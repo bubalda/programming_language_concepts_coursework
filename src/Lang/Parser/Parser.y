@@ -7,10 +7,10 @@ import Lang.Parser.Expr (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator
 import Lang.Repl.Helper (formatPos)
 }
 
-%name parse
-%tokentype { Token }
-%monad { Either String } { >>= } { return }
-%error { parseError }
+%name parse                                   -- My parse function name
+%tokentype { Token }                          -- My token's type name
+%monad { Either String } { >>= } { return }   -- Returns a monadic Either (ValueType, ErrorString)
+%error { parseError }                         -- My parse error handler name
 
 %token
   -- Constants and Literals
@@ -20,7 +20,9 @@ import Lang.Repl.Helper (formatPos)
   float                          { Token (TokFloat $$)      _ }
   char                           { Token (TokChar $$)       _ }
   string                         { Token (TokString $$)     _ }
-  ident                          { Token (TokIdent $$)      _ } -- Identifier / Variable / Functions
+
+  -- Identifier = Variable / Function name
+  ident                          { Token (TokIdent $$)      _ }
   
   -- Assignment Operators
   '+='                           { Token TokAddAssign       _ }
@@ -35,17 +37,19 @@ import Lang.Repl.Helper (formatPos)
   '>>='                          { Token TokBitRShiftAssign _ }
   '='                            { Token TokAssign          _ }
   
-  -- Special characters
-  ','                            { Token TokComma           _ }
+  -- End of line
   ';'                            { Token TokSemiColon       _ }
+
+  -- List Operations
+  ','                            { Token TokComma           _ }
   ':'                            { Token TokColon           _ }
   '..'                           { Token TokDotDot          _ }
-
-  -- Brackets
-  '('                            { Token TokLBrack          _ }
-  ')'                            { Token TokRBrack          _ }
   '['                            { Token TokLSqBrack        _ }
   ']'                            { Token TokRSqBrack        _ }
+
+  -- Brackets (Precedence)
+  '('                            { Token TokLBrack          _ }
+  ')'                            { Token TokRBrack          _ }
 
   -- Logical Operators
   '!'                            { Token TokNot             _ }
@@ -85,6 +89,7 @@ import Lang.Repl.Helper (formatPos)
 -- https://en.cppreference.com/w/c/language/operator_precedence.html
 -- https://haskell-happy.readthedocs.io/en/latest/using.html#context-dependent-precedence
 -- Precedence can also be handled here so no need to do manual structural precedence
+-- Low precedence -> High precedence 
 %nonassoc LET
 %right '=' '+=' '-=' '*=' '/=' '%=' '&=' '|=' '^=' '<<=' '>>='
 %left '||'
@@ -107,22 +112,23 @@ import Lang.Repl.Helper (formatPos)
 Program
   : Stmts                                       { $1 }
 
--- Statement should separated using a semicolon (;) 
+-- Allows repl to support one-liners like this -- x = 7; x += 1; x *= 2; x
 Stmts 
   : Stmts Stmt                                  { $1 ++ [$2] }
   | Stmt                                        { [$1] }
 
 Stmt
+  -- if conditions
   : 'if' Expr 'then' Stmt %prec NO_ELSE         { If $2 $4 Nothing } 
   | 'if' Expr 'then' Stmt 'else' Stmt           { If $2 $4 (Just $6) }
 
+  -- Statement should separated using a semicolon (;) 
   | ident '=' Expr ';'                           { Assign $1 $3 }                      -- x = 10 (Dynamic read type)
   | ident AssignOp Expr ';'                      { AssignOp $2 $1 $3 }                 -- x += 10, x *= 6 etc.
   | Expr ';'                                     { ExprStmt $1 }                       -- x
 
 
 -- Couple logic together since parameters and precedence is similar
--- Generate eval logic at eval
 AssignOp
   : '+='   { AddEq }
   | '-='   { SubEq }
@@ -159,18 +165,20 @@ Expr
   | Expr '%'  Expr                                { BinOp Mod $1 $3 }
   | Unary                                         { $1 }
 
+-- Enforce structural precedence and prevent shift / reduce errors
 Unary
   : '!' Unary %prec NOT     { Not $2 }
   | '-' Unary %prec NEG     { Negate $2 }
   | Postfix                 { $1 }
 
+-- Enforce structural precedence and prevent shift / reduce errors
 Postfix
   : Postfix '[' Expr ']'           { ListIndex $1 $3 }
   | Postfix '[' Slice ']'          { ListSlice $1 $3 }
   | Postfix '(' FunctionArgs ')'   { Call $1 $3 }
   | Primary                        { $1 }
   
--- Type of values
+-- Types of values
 Primary
   : '(' Expr ')'              { $2 }
   | null                      { NullLit }
@@ -180,9 +188,11 @@ Primary
   | float                     { FloatLit $1 }
   | string                    { StringLit $1 }
   | '[' ListElems ']'         { ListLit $2 }
-  | '[' Expr '..' Expr ']'    { ListTexasRange $2 $4 }
+  | '[' Expr '..' Expr ']'    { ListRange $2 $4 }
   | ident                     { Var $1 }        -- Identifier
 
+-- More efficient by using a left-recursive list
+-- As mentioned by https://haskell-happy.readthedocs.io/en/latest/tips.html#performance-tips
 ListElems
   : ListElemsList     { reverse $1 }
   |                   { [] }
@@ -199,16 +209,14 @@ MaybeExpr
   : Expr    { Just $1 }
   |         { Nothing }
 
-
 FunctionArgs
   : FunctionArgsList { reverse $1 }
   |                  { [] }
 
--- More efficient by using a left-recursive list
+-- More efficient by using a left-recursive list and reverse after
 FunctionArgsList
   : Expr                        { [$1] }
   | FunctionArgsList ',' Expr   { $3 : $1 }
-
 
 {
 -- Show error when parsing, check if you initialized it in the parser
@@ -216,6 +224,7 @@ parseError :: [Token] -> Either String a
 parseError [] = Left "<PARSER ERROR> -- Unexpected end of input. Did you end with a ';'?"
 parseError ((Token tt (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected token `" ++ show tt ++ "`"
 
+-- Run the happy generated parser to get the ast
 runParser :: String -> [Token] -> Either String [Stmt]
 runParser src toks = case parse (filter (not . parserIgnore . tokenType) toks) of
   Right ast -> Right ast

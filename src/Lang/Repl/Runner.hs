@@ -13,6 +13,7 @@ import Lang.Repl.Env (ReplEnv (programEnv, replFlags), ReplFlags (..))
 import Lang.Repl.Helper (putStrLnRepl)
 import System.Console.Haskeline (InputT)
 
+-- Runs the user input
 runLine :: ReplEnv -> String -> InputT IO ReplEnv
 runLine rEnv line = do
   -- Lex --

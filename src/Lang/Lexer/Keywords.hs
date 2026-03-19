@@ -4,61 +4,68 @@ module Lang.Lexer.Keywords (functions) where
 -- Should be resolved in eval stage on object `Call FunctionName [ArgsExpr]`
 functions :: [String]
 functions =
-  [ -- List length
-    "len",
-    
+  [ -- List / String length
+    -- otherwise we'd have to do [1,2,3].length() instead which is more tokens
+    -- so we'd just do length([1,2,3])
+    "length",
+
     -- Hyperbolic Functions
-    "sinh",
-    "cosh",
-    "tanh",
-    "csch",
-    "sech",
-    "coth",
-    "asinh",
-    "acosh",
+    "sinh", -- sinh x
+    "cosh", -- cosh x
+    "tanh", -- tanh x
+    "csch", -- csch x
+    "sech", -- sech x
+    "coth", -- coth x
+    "asinh", -- asinh x
+    "acosh", -- acosh x
+
     -- Statistical Functions
-    "mean",
-    "median",
-    "mode",
-    "sum",
-    "product",
-    "min",
-    "max",
-    "stddev",
+    "mean", -- average [x]
+    "median", -- median [x]
+    "mode", -- mode [x]
+    "sum", -- foldr (+) [x'
+    "product", -- foldr (*) [x]
+    "min", -- min [x]
+    "max", -- max [x]
+    "stddev", -- std [x]
+
     -- Power and Root Functions
-    "sqrt",
-    "cbrt",
-    "pow",
-    "exp",
-    "square",
-    "cube",
-    "exp10",
+    "sqrt", -- x^(1/2)
+    "cbrt", -- x^(1/3)
+    "pow", -- x^n
+    "exp", -- e^x
+    "square", -- x^2
+    "cube", -- x^3
+    "exp10", -- 10^x
+
     -- Trigonometric Functions
-    "sin",
-    "cos",
-    "tan",
-    "asin",
-    "acos",
-    "atan",
-    "atan2",
-    "sec",
-    "csc",
-    "cot",
-    "versin",
-    "exsec",
+    "sin", -- sin x
+    "cos", -- cos x
+    "tan", -- tan x
+    "asin", -- asin x
+    "acos", -- acos x
+    "atan", -- atan x
+    "atan2", -- atan2 x y
+    "sec", -- sec x
+    "csc", -- csc x
+    "cot", -- cot x
+    "versin", -- versin x
+    "exsec", -- exsec x
+
     -- Logarithmic Functions
-    "ln",
-    "log10",
-    "log2",
-    "log",
-    "log1p",
+    "ln", -- ln x
+    "log10", -- log10 x
+    "log2", -- log2 x
+    "log", -- log x
+    "log1p", -- log1p x
+
     -- Combinatorial Functions
-    "fact",
-    "fact2",
-    "comb",
-    "perm",
-    "gcd",
-    "lcm",
-    "fib",
-    "gamma"
+    "fact", -- fact x
+    "fact2", -- factSquared x
+    "comb", -- combination r n
+    "perm", -- permutation r n
+    "gcd", -- gcd [x]
+    "lcm", -- lcm [x]
+    "fib", -- fib x
+    "gamma" -- gamma x
   ]

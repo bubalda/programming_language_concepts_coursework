@@ -13,6 +13,7 @@ import System.Console.Haskeline
     runInputT,
   )
 
+-- Allows users to type commands and run it interactively
 repl :: ReplEnv -> IO ()
 repl replEnv = do
   replWelcome
@@ -27,6 +28,7 @@ repl replEnv = do
           | isBlankLine line -> loop rEnv -- Ignore blank lines
           | commandPrefix `isPrefixOf` line -> handleCommand loop rEnv line
           | otherwise -> do
-              let addEndSemiColon = if last line /= ';' then line ++ ";" else line
-              rEnv' <- runLine rEnv addEndSemiColon
-              loop rEnv'
+            -- Ensures semicolon are placed on each end of line (for ease of use)
+            let ensureSemicolon = if last line /= ';' then line ++ ";" else line
+            rEnv' <- runLine rEnv ensureSemicolon
+            loop rEnv'

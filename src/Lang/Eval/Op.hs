@@ -10,6 +10,7 @@ import Lang.Eval.Types (EvalM, Value (..))
 import Lang.Parser.Expr (AssignOperator (..), TwoExprOperator (..))
 import Lang.Eval.Errors (expectVInt, expectVBool)
 
+-- Evaluator
 applyAssignOp :: AssignOperator -> Value -> Value -> EvalM Value
 applyAssignOp op old val = calcBinOp (assignToBin op) old val
 

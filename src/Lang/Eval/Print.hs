@@ -7,6 +7,7 @@ where
 import Lang.Eval.Types (Value(..))
 import Lang.Repl.Helper (wrapSection)
 
+-- For REPL
 printEval :: Value -> IO ()
 printEval (VBool b) = putStrLn (show b)
 printEval (VInt i) = putStrLn (show i)

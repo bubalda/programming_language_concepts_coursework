@@ -3,7 +3,7 @@ module Lang.Eval.Errors where
 import Lang.Eval.Types (EvalM, Value(..))
 import Control.Monad.Except (throwError)
 
--- Error handles
+-- Error handlers for typechecker
 expectVInt :: Value -> EvalM Int
 expectVInt (VInt v) = return v
 expectVInt v = throwError $ expectVErr (VInt 0) v

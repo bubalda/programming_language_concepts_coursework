@@ -23,6 +23,7 @@ $stringChar  = [^\"\\\n]
 
 
 -- Token matches by (Top-Down) (Long-Short)
+-- But still, place "==" before "=" to prevent reading two "=" instead of one "=="
 tokens :-
   -- Ignore
   $white+                        ; -- As long there is one separating between tokens
@@ -48,10 +49,6 @@ tokens :-
   "<<="                          { simpleTokenize TokBitLShiftAssign }
   ">>="                          { simpleTokenize TokBitRShiftAssign }
   "="                            { simpleTokenize TokAssign }
-
-  -- Brackets
-  "("                            { simpleTokenize TokLBrack }
-  ")"                            { simpleTokenize TokRBrack }
 
   -- List
   "["                            { simpleTokenize TokLSqBrack }
@@ -87,6 +84,10 @@ tokens :-
   "<<"                           { simpleTokenize TokBitLShift }
   ">>"                           { simpleTokenize TokBitRShift }
 
+  -- Brackets
+  "("                            { simpleTokenize TokLBrack }
+  ")"                            { simpleTokenize TokRBrack }
+
   -- End of line
   ";"                            { simpleTokenize TokSemiColon }
 
@@ -97,12 +98,13 @@ tokens :-
   .                              { tokenize TokError }
 
 {
+-- Tokenize words
 identTokenize :: AlexInput -> Int -> Alex Token
 identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) inp len
   where
-    -- Check for matched string using `case of` instead of alex lexer
+    -- Check for matched string using `case of` instead of using `alex lexer`
     -- to prevent incorrect matches like "sinh" => "sin" + "h" due to
-    -- code writing errors
+    -- code arrangement errors
     getToken :: String -> TokenType
     getToken s = case s of
       -- Constants and Literals
@@ -175,8 +177,7 @@ runLexer input = case runAlex input scanTokens of
       ++ "<LEXER ERROR> -- Could not tokenize string "
       ++ show s
 
-
--- TODO Touch this on later stages
+-- For nested comments
 data AlexUserState = AlexUserState
   { lexerCommentDepth  :: Int
   , lexerStringValue   :: String
@@ -188,3 +189,5 @@ alexInitUserState = AlexUserState
   , lexerStringValue   = ""
   }
 }
+
+-- What is sequences? Waiting for lecturer's reply

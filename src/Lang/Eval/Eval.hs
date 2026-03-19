@@ -4,10 +4,11 @@ import Control.Monad.Except (runExceptT, throwError)
 import Data.Functor.Identity (Identity (runIdentity))
 import qualified Data.Map as Map
 import Lang.Eval.Errors (expectVBool, expectVInt)
+import Lang.Eval.Op (applyAssignOp, calcBinOp)
 import Lang.Eval.Types (EvalM, ProgramEnv, Value (..))
 import Lang.Parser.Expr (Expr (..), Stmt (..), TwoExprOperator (..))
-import Lang.Eval.Op (applyAssignOp, calcBinOp)
 
+-- Run evaluator
 runEval :: EvalM a -> Either String a
 runEval ev = runIdentity (runExceptT ev)
 
@@ -17,12 +18,10 @@ evalStmt env stmt =
     ExprStmt e -> do
       val <- evalExpr env e
       return (env, val)
-
     Assign name expr -> do
       val <- evalExpr env expr
       let env' = Map.insert name val env
       return (env', val)
-    
     AssignOp op name expr -> do
       val <- evalExpr env expr
       old <- case Map.lookup name env of
@@ -36,6 +35,7 @@ evalStmt env stmt =
     -- Not implemented error
     s -> throwError $ "ERROR: Function `" ++ show s ++ "` is not defined"
 
+-- Evaluation of expressions
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
 evalExpr env expr =
   case expr of
@@ -49,14 +49,12 @@ evalExpr env expr =
       case Map.lookup v env of
         Just val -> return val
         Nothing -> throwError ("Undefined identifier: " ++ v)
-    
     BinOp And a b -> logicOpLazy False a b
     BinOp Or a b -> logicOpLazy True a b
     BinOp op a b -> do
       va <- eval a
       vb <- eval b
       calcBinOp op va vb
-    
     Negate a -> do
       x <- eInt a
       return $ VInt (-x)
@@ -70,12 +68,10 @@ evalExpr env expr =
     eInt e = eval e >>= expectVInt
     eBool e = eval e >>= expectVBool
 
-    -- Lazy evaluation of and | or 
+    -- Lazy evaluation of and | or
     -- Example: true || 'hello' => true (Since LHS is true, 'hello' is not evaluated)
     logicOpLazy retEarly a b = do
       va <- eBool a
-      if va == retEarly 
-        then return (VBool retEarly) 
+      if va == retEarly
+        then return (VBool retEarly)
         else eval b
-
-

@@ -31,6 +31,7 @@ data TokenType
   | TokChar Char | TokString String
 
   -- List
+  | TokLSqBrack | TokRSqBrack
   | TokComma | TokColon | TokDotDot
   
   -- End of line
@@ -41,7 +42,7 @@ data TokenType
   | TokLet | TokIn
 
   -- Scoping               
-  | TokLBrack | TokRBrack | TokLSqBrack | TokRSqBrack
+  | TokLBrack | TokRBrack 
 
   -- Logical Op
   | TokNot | TokAnd | TokOr                                                                   
