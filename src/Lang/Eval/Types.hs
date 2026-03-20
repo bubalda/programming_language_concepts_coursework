@@ -14,6 +14,7 @@ data Value
   | VFloat Float
   | VChar Char
   | VString String
+  | VList [Value]
   deriving (Show, Eq)
 
 type EvalM = ExceptT String Identity

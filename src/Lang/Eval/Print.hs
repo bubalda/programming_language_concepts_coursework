@@ -14,6 +14,7 @@ printEval (VInt i) = putStrLn (show i)
 printEval (VChar v) = putStrLn (show v)
 printEval (VFloat f) = putStrLn (show f)
 printEval (VString s) = putStrLn s
+printEval (VList xs) = putStrLn (show xs)
 printEval (VNull) = putStrLn "null"
 
 printEvalPretty :: Value -> Int -> IO ()

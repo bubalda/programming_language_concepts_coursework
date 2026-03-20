@@ -8,7 +8,8 @@ where
 import Data.Bits (Bits (shiftL, shiftR, xor), (.&.), (.|.))
 import Lang.Eval.Types (EvalM, Value (..))
 import Lang.Parser.Expr (AssignOperator (..), TwoExprOperator (..))
-import Lang.Eval.Errors (expectVInt, expectVBool)
+import Lang.Eval.Errors (expectVBool, expectVInt, expectVNumeric)
+import Control.Monad.Except (throwError)
 
 -- Evaluator
 applyAssignOp :: AssignOperator -> Value -> Value -> EvalM Value
@@ -29,12 +30,16 @@ assignToBin BitRShiftEq = BitRShift
 calcBinOp :: TwoExprOperator -> Value -> Value -> EvalM Value
 calcBinOp op a b =
   case op of
-    -- Arithmetic operations (TODO type check for float and allow it)
-    Add -> intBinOp (+)
-    Sub -> intBinOp (-)
-    Mul -> intBinOp (*)
-    Div -> intBinOp div
-    Mod -> intBinOp mod
+
+    Add -> numBinOp (+) (+)
+    Sub -> numBinOp (-) (-)
+    Mul -> numBinOp (*) (*)
+    Div -> do
+      y <- expectVNumeric b
+      if abs y < 1e-7
+        then throwError "Division by zero"
+        else numBinOp div (/) 
+    Mod -> intBinOpSafe mod "Modulo by zero"
 
     -- Bit operations
     BitAnd -> intBinOp (.&.)
@@ -43,13 +48,13 @@ calcBinOp op a b =
     BitLShift -> intBinOp shiftL
     BitRShift -> intBinOp shiftR
 
-    -- Comparison operations (TODO type check for float and allow it)
-    Eq -> return $ VBool (a == b)
-    Neq -> return $ VBool (a /= b)
-    Lte -> cmpInt (<=)
-    Lt -> cmpInt (<)
-    Gte -> cmpInt (>=)
-    Gt -> cmpInt (>)
+
+    Eq -> cmpEq True
+    Neq -> cmpEq False
+    Lte -> cmpNum (<=)
+    Lt -> cmpNum (<)
+    Gte -> cmpNum (>=)
+    Gt -> cmpNum (>)
     And -> logicAnd
     Or -> logicOr
     
@@ -59,10 +64,28 @@ calcBinOp op a b =
       y <- expectVInt b
       return $ VInt (f x y)
 
-    cmpInt f = do
+    intBinOpSafe f err = do
       x <- expectVInt a
       y <- expectVInt b
+      if y == 0 then throwError err else return $ VInt (f x y)
+
+    numBinOp fInt fFloat = case (a, b) of
+      (VInt x, VInt y) -> return $ VInt (fInt x y)
+      _ -> do
+        x <- expectVNumeric a
+        y <- expectVNumeric b
+        return $ VFloat (fFloat x y)
+
+    cmpNum f = do
+      x <- expectVNumeric a
+      y <- expectVNumeric b
       return $ VBool (f x y)
+
+    cmpEq shouldEq = case (a, b) of
+
+      (VInt x, VFloat y) -> return $ VBool ((fromIntegral x == y) == shouldEq)
+      (VFloat x, VInt y) -> return $ VBool ((x == fromIntegral y) == shouldEq)
+      _ -> return $ VBool ((a == b) == shouldEq)
 
     logicAnd = do
       x <- expectVBool a

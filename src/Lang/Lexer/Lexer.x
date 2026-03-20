@@ -2,6 +2,7 @@
 module Lang.Lexer.Lexer (runLexer) where
 import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
 import Lang.Repl.Helper (formatPos)
+import Text.Read (readMaybe)
 }
 
 -- https://haskell-alex.readthedocs.io/en/latest/api.html#the-monaduserstate-wrapper
@@ -14,12 +15,12 @@ $char        = [^\'\\\n]
 $stringChar  = [^\"\\\n]
 
 -- https://gdevanla.github.io/posts/wya-lexer.html#numerical_values
-@digitpart     =  $digit($digit)*
+@digitpart     =  $digit+
 @fraction      =  [\.] @digitpart
-@pointfloat    =  (@digitpart)* @fraction | @digitpart[\.]
+-- Task5: 浮点必须包含小数位，避免把 "4." 误判后触发 read 崩溃
+@pointfloat    =  @digitpart @fraction | @fraction
 @exponent      =  [eE] ([\+\-]?) @digitpart
-@exponentfloat =  (@digitpart | @pointfloat)* @exponent
-@floatnumber   =  @pointfloat | @exponentfloat
+@floatnumber   =  (@pointfloat @exponent?) | (@digitpart @exponent)
 
 
 -- Token matches by (Top-Down) (Long-Short)
@@ -38,7 +39,8 @@ tokens :-
 
 
   -- Literals
-  <0> @floatnumber / [^\.]           { valueTokenize TokFloat }
+  -- Task5: 去掉 lookahead，行尾的 "4.5" 也能稳定识别
+  <0> @floatnumber                   { valueTokenizeSafe TokFloat "Invalid float literal" }
   <0> $digit+                        { valueTokenize TokInt }
   <0> \'($char|\\.)\'                { valueTokenize TokChar }
   <0> \"($stringChar|\\.)*\"         { valueTokenize TokString }
@@ -152,6 +154,12 @@ simpleTokenize tt = tokenize (const tt)
 -- Returns value as an Int (enforced by type signature)
 valueTokenize :: Read a => (a -> TokenType) -> AlexInput -> Int -> Alex Token
 valueTokenize tt = tokenize (tt . read)
+
+valueTokenizeSafe :: Read a => (a -> TokenType) -> String -> AlexInput -> Int -> Alex Token
+valueTokenizeSafe tt errMsg (pos, _, _, str) len =
+  case readMaybe (take len str) of
+    Just v -> pure $ Token (tt v) (getTokenPos pos)
+    Nothing -> pure $ Token (TokError errMsg) (getTokenPos pos)
 
 -- REPL
 -- Generate tokens for parser / debug printer
