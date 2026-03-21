@@ -5,8 +5,6 @@ module Lang.Lexer.Keywords (functions) where
 functions :: [String]
 functions =
   [ -- List / String length
-    -- otherwise we'd have to do [1,2,3].length() instead which is more tokens
-    -- so we'd just do length([1,2,3])
     "length",
 
     -- Hyperbolic Functions

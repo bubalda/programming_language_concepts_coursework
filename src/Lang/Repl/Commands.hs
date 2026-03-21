@@ -21,21 +21,34 @@ import System.Exit (exitSuccess)
 -- 4. 现在的话如果输入 x = 10 eval 会 print x 的 value，不过可以不让他这样做吗？
 --    就是让 x = 7; x += 1; x *= 2; x 这整段只返回一行 16
 --    然后 x = 7; x += 1; x *= 2;     什么都不返回，因为 x 才会触发 print
+-- 5. Autocomplete and persistent history for repl (那边好像有写，又好像没有不过感觉会很不错所以有时间就做吧)
 
 -- Debug mode also switches :tokens and :ast to true
 handleCommand :: (ReplEnv -> InputT IO ()) -> ReplEnv -> String -> InputT IO ()
 handleCommand loop rEnv line = do
   case words line of
-    [":?"] -> liftIO displayHelp >> loop rEnv
-    [":q"] -> liftIO exitSuccess
+    [":?"] -> liftIO displayHelp >> loop rEnv -- Help page
+    [":q"] -> liftIO exitSuccess -- Quits the repl gracefully (Ctrl+D also does the same thing)
+
+    -- Turn on debug mode which turns on :tokens, :ast and :evalPretty
     [":debug"] -> showFlag (\f -> debugMode f) "Debug Mode" loop rEnv
     [":debug", val] -> setFlag (\_ b -> if b then debugFlags else releaseFlags) "Debug Mode" val loop rEnv
+
+    -- Print tokens for debug
     [":tokens"] -> showFlag (\f -> showTokens f) "Show Tokens" loop rEnv
     [":tokens", val] -> setFlag (\f b -> f {showTokens = b}) "Show Tokens" val loop rEnv
+
+    -- Print AST for debug
     [":ast"] -> showFlag (\f -> showAST f) "Show AST" loop rEnv
     [":ast", val] -> setFlag (\f b -> f {showAST = b}) "Show AST" val loop rEnv
+
+    -- Prettify evaluator results
     [":evalPretty"] -> showFlag (\f -> prettyEval f) "Prettify Evaluator Result" loop rEnv
     [":evalPretty", val] -> setFlag (\f b -> f {prettyEval = b}) "Prettify Evaluator Result" val loop rEnv
+
+    -- To mimic normal repl (Py as reference) behaviour (default on)
+    [":semicolonEnd"] -> showFlag (\f -> semicolonEnd f) "Auto apply ending semicolon on command line" loop rEnv
+    [":semicolonEnd", val] -> setFlag (\f b -> f {semicolonEnd = b}) "Auto apply ending semicolon on command line" val loop rEnv
     _ -> putStrLnRepl ("Unknown command. Check :? for help.") >> loop rEnv
 
 -- Repl Commands (TODO mapper)

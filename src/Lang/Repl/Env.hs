@@ -12,7 +12,8 @@ data ReplFlags = ReplFlags
   { debugMode :: Bool,
     showTokens :: Bool,
     showAST :: Bool,
-    prettyEval :: Bool
+    prettyEval :: Bool,
+    semicolonEnd :: Bool
   }
 
 -- Settings used for debugging
@@ -22,7 +23,8 @@ debugFlags =
     { debugMode = True,
       showTokens = True, -- TODO switch this off using `:tokens off`
       showAST = True,
-      prettyEval = True
+      prettyEval = True,
+      semicolonEnd = True
     }
 
 -- Settings used for release
@@ -32,5 +34,6 @@ releaseFlags =
     { debugMode = False,
       showTokens = False,
       showAST = False,
-      prettyEval = False
+      prettyEval = False,
+      semicolonEnd = True
     }

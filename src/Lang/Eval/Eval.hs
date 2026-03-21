@@ -202,8 +202,16 @@ dispatchCall fn args =
     "acosh" -> unaryFloat "acosh" args $ \x ->
       if x < 1 then Left "acosh: input must be >= 1" else Right (acosh x)
 
-    _ -> throwError ("Unknown function: " ++ fn)
+    _ -> throwError ("Unknown function: `" ++ fn ++ "`")
 
+paramError :: String -> Int -> String -> String
+paramError f x t = "ParamError: The function `" ++ f ++ "` expects exactly "++ show x ++ " argument" ++ plural ++ withType
+  where
+    plural :: String 
+    plural = if (x > 1) then "s" else ""
+
+    withType :: String 
+    withType = if (length t /= 0) then (" with type " ++ t ++ ".") else "."
 
 unaryFloat :: String -> [Value] -> (Float -> Either String Float) -> EvalM Value
 unaryFloat name args f =
@@ -213,7 +221,7 @@ unaryFloat name args f =
       case f vx of
         Left err -> throwError err
         Right out -> pureFloat name out
-    _ -> throwError (name ++ " expects exactly 1 argument")
+    _ -> throwError (paramError name 1 "")
 
 binaryFloat :: String -> [Value] -> (Float -> Float -> Either String Float) -> EvalM Value
 binaryFloat name args f =
@@ -224,7 +232,7 @@ binaryFloat name args f =
       case f x y of
         Left err -> throwError err
         Right out -> pureFloat name out
-    _ -> throwError (name ++ " expects exactly 2 arguments")
+    _ -> throwError (paramError name 2 "")
 
 unaryInt :: String -> [Value] -> (Int -> Either String Int) -> EvalM Value
 unaryInt name args f =
@@ -234,7 +242,7 @@ unaryInt name args f =
       case f vx of
         Left err -> throwError err
         Right out -> return $ VInt out
-    _ -> throwError (name ++ " expects exactly 1 integer argument")
+    _ -> throwError (paramError name 1 "integer")
 
 binaryInt :: String -> [Value] -> (Int -> Int -> Either String Int) -> EvalM Value
 binaryInt name args f =
@@ -245,7 +253,7 @@ binaryInt name args f =
       case f x y of
         Left err -> throwError err
         Right out -> return $ VInt out
-    _ -> throwError (name ++ " expects exactly 2 integer arguments")
+    _ -> throwError (paramError name 2 "integer")
 
 pureFloat :: String -> Float -> EvalM Value
 pureFloat name x
@@ -257,14 +265,13 @@ reciprocalSafe fn x
   | abs x < 1e-7 = Left (fn ++ ": undefined for this input")
   | otherwise = Right (1 / x)
 
-
 toFloatListArgs :: String -> [Value] -> EvalM [Float]
 toFloatListArgs fn args =
   case args of
     [VList xs] -> mapM expectVNumeric xs
     _ ->
       if null args
-        then throwError (fn ++ " expects at least 1 numeric argument")
+        then throwError (paramError fn 1 "numeric")
         else mapM expectVNumeric args
 
 toIntListArgs :: String -> [Value] -> EvalM [Int]
@@ -273,7 +280,7 @@ toIntListArgs fn args =
     [VList xs] -> mapM expectVInt xs
     _ ->
       if null args
-        then throwError (fn ++ " expects at least 1 integer argument")
+        then throwError (paramError fn 1 "integer")
         else mapM expectVInt args
 
 -- =====================
@@ -299,20 +306,20 @@ fnLog args =
           if v <= 0
             then Left "log: input must be > 0"
             else Right (logBase b v)
-    _ -> throwError "log expects 1 or 2 arguments"
+    _ -> throwError "log: expects 1 or 2 arguments"
 
 fnGcd :: [Value] -> EvalM Value
 fnGcd args = do
   xs <- toIntListArgs "gcd" args
   if null xs
-    then throwError "gcd expects at least 1 integer argument"
+    then throwError "gcd: expects at least 1 integer argument"
     else return $ VInt (foldl1' gcd xs)
 
 fnLcm :: [Value] -> EvalM Value
 fnLcm args = do
   xs <- toIntListArgs "lcm" args
   if null xs
-    then throwError "lcm expects at least 1 integer argument"
+    then throwError "lcm: expects at least 1 integer argument"
     else return $ VInt (foldl1' lcm xs)
 
 fnMean :: [Value] -> EvalM Value
@@ -418,7 +425,7 @@ fib n
     go 0 a _ = a
     go k a b = go (k -1) b (a + b)
 
--- Lanczos 近似
+-- Similar to Lanczos
 gamma :: Float -> Either String Float
 gamma zf =
   let z = realToFrac zf :: Double
@@ -473,7 +480,7 @@ sliceList env xs (Slice mStart mStop mStep) = do
   where
     n = length xs
 
-    -- 这里只用于 Slice 的 Maybe Expr 求值
+    -- Helper functions
     evalTemp :: Expr -> EvalM Value
     evalTemp e = evalExpr env e
 

@@ -17,7 +17,7 @@ $stringChar  = [^\"\\\n]
 -- https://gdevanla.github.io/posts/wya-lexer.html#numerical_values
 @digitpart     =  $digit+
 @fraction      =  [\.] @digitpart
--- Task5: 浮点必须包含小数位，避免把 "4." 误判后触发 read 崩溃
+-- Floating point must have values to prevent crashing Prelude.read on values like "4."
 @pointfloat    =  @digitpart @fraction | @fraction
 @exponent      =  [eE] ([\+\-]?) @digitpart
 @floatnumber   =  (@pointfloat @exponent?) | (@digitpart @exponent)
@@ -39,8 +39,8 @@ tokens :-
 
 
   -- Literals
-  -- Task5: 去掉 lookahead，行尾的 "4.5" 也能稳定识别
-  <0> @floatnumber                   { valueTokenizeSafe TokFloat "Invalid float literal" }
+  -- Remove lookahead to read sucessfully read floats at the end of line
+  <0> @floatnumber                   { valueTokenizeSafe TokFloat "Error: Invalid float literal" }
   <0> $digit+                        { valueTokenize TokInt }
   <0> \'($char|\\.)\'                { valueTokenize TokChar }
   <0> \"($stringChar|\\.)*\"         { valueTokenize TokString }
