@@ -1,0 +1,7 @@
+*.hi
+*.o
+*.exe
+Lexer.hs
+Parser.hs
+.repl-env
+.repl-history
