@@ -1,0 +1,6 @@
+:q
+:history
+:env
+x = 10
+:help
+；help

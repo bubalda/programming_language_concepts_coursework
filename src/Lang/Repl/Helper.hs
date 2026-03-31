@@ -1,12 +1,21 @@
 module Lang.Repl.Helper
   ( replWelcome,
     replPrompt,
+    replContinuationPrompt,
     replEOFExit,
     isBlankLine,
     wrapSection,
     uppercase,
     putStrLnRepl,
-    formatPos
+    putInfoRepl,
+    putSuccessRepl,
+    putErrorRepl,
+    putInfoLn,
+    putSuccessLn,
+    putErrorLn,
+    colorize,
+    normalizeLeadingColon,
+    formatPos,
   )
 where
 
@@ -15,24 +24,47 @@ import Data.Char (toUpper)
 import System.Console.Haskeline (InputT)
 import System.Exit (exitSuccess)
 
--- Repl Prints and Checks
+-- Repl prints and checks.
 replWelcome :: IO ()
-replWelcome = putStrLn $ "Welcome to C2Repl, use :? for help page.\nUse :q or EOF (Ctrl+D) to quit, and Ctrl+C to force stop the program."
+replWelcome = do
+  putInfoLn "Welcome to C2Repl."
+  putStrLn "Use :? or :help for commands."
+  putStrLn "Use :q or EOF (Ctrl+Z then Enter on Windows) to quit."
 
 replPrompt :: String
 replPrompt = "c2> "
 
-replEOFExit :: IO ()
-replEOFExit = putStrLn "Received EOF, leaving C2Repl." >> exitSuccess
+replContinuationPrompt :: String
+replContinuationPrompt = "... "
 
-isBlankLine :: (Foldable t) => t Char -> Bool
+replEOFExit :: IO ()
+replEOFExit = putSuccessLn "Received EOF, leaving C2Repl." >> exitSuccess
+
+isBlankLine :: Foldable t => t Char -> Bool
 isBlankLine line = all (`elem` " \t\n\r") line
 
 putStrLnRepl :: String -> InputT IO ()
 putStrLnRepl = liftIO . putStrLn
 
--- Pretty Print
--- The title bar length
+putInfoRepl :: String -> InputT IO ()
+putInfoRepl = liftIO . putInfoLn
+
+putSuccessRepl :: String -> InputT IO ()
+putSuccessRepl = liftIO . putSuccessLn
+
+putErrorRepl :: String -> InputT IO ()
+putErrorRepl = liftIO . putErrorLn
+
+putInfoLn :: String -> IO ()
+putInfoLn = putStrLn . colorize cyanCode
+
+putSuccessLn :: String -> IO ()
+putSuccessLn = putStrLn . colorize greenCode
+
+putErrorLn :: String -> IO ()
+putErrorLn = putStrLn . colorize redCode . ("Error: " ++)
+
+-- Pretty print.
 headerWidth :: Int
 headerWidth = 120
 
@@ -54,6 +86,18 @@ wrapSection title content = do
 uppercase :: String -> String
 uppercase = map toUpper
 
--- Allows VSCode shortcut to code position
+colorize :: String -> String -> String
+colorize code text = "\ESC[" ++ code ++ "m" ++ text ++ "\ESC[0m"
+
+normalizeLeadingColon :: String -> String
+normalizeLeadingColon ('\xff1a' : rest) = ':' : rest
+normalizeLeadingColon line = line
+
+redCode, greenCode, cyanCode :: String
+redCode = "31;1"
+greenCode = "32;1"
+cyanCode = "36;1"
+
+-- Allows VSCode shortcut to code position.
 formatPos :: Int -> Int -> String
 formatPos l c = show l ++ ":" ++ show c ++ ": "

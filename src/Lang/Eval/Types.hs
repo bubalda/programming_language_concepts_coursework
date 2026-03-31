@@ -15,6 +15,6 @@ data Value
   | VChar Char
   | VString String
   | VList [Value]
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 type EvalM = ExceptT String Identity

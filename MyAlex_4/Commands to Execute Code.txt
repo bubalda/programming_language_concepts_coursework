@@ -1,7 +1,0 @@
-Commands to Execute Code
-
-Open Windows PowerShell and execute the given command by using the path where these files are saved.
-
-alex myAlex.x -o Lexer.hs
-happy --ghc Parser.y -o Parser.hs
-ghc --make Main.hs -o myParser.exe

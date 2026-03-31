@@ -11,7 +11,7 @@ import Lang.Parser.Expr (Stmt)
 import Lang.Parser.Helper (printAST)
 import Lang.Parser.Parser (runParser)
 import Lang.Repl.Env (ReplEnv (programEnv, replFlags), ReplFlags (..))
-import Lang.Repl.Helper (putStrLnRepl)
+import Lang.Repl.Helper (putErrorRepl)
 import System.Console.Haskeline (InputT)
 
 -- Runs the user input
@@ -38,7 +38,7 @@ runLine rEnv execLine = do
   where
     -- Show error, and reprompt a new line with current env
     errReturn :: String -> ReplEnv -> InputT IO ReplEnv
-    errReturn err rEnv = putStrLnRepl err >> return rEnv
+    errReturn err envState = putErrorRepl err >> return envState
 
     endSemicolon tokens =
       let lastTok = last tokens

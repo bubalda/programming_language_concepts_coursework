@@ -1,21 +1,25 @@
 module Lang.Eval.Print
   ( printEval,
     printEvalPretty,
+    renderEval,
   )
 where
 
 import Lang.Eval.Types (Value(..))
-import Lang.Repl.Helper (wrapSection)
+import Lang.Repl.Helper (putSuccessLn, wrapSection)
+
+renderEval :: Value -> String
+renderEval (VBool b) = show b
+renderEval (VInt i) = show i
+renderEval (VChar v) = show v
+renderEval (VFloat f) = show f
+renderEval (VString s) = s
+renderEval (VList xs) = show xs
+renderEval VNull = "null"
 
 -- For REPL
 printEval :: Value -> IO ()
-printEval (VBool b) = putStrLn (show b)
-printEval (VInt i) = putStrLn (show i)
-printEval (VChar v) = putStrLn (show v)
-printEval (VFloat f) = putStrLn (show f)
-printEval (VString s) = putStrLn s
-printEval (VList xs) = putStrLn (show xs)
-printEval (VNull) = putStrLn "null"
+printEval = putSuccessLn . renderEval
 
 printEvalPretty :: Value -> Int -> IO ()
 printEvalPretty val line = wrapSection ("Evaluation Result (Line " ++ show line ++ ")") (printEval val)

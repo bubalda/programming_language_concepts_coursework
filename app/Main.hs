@@ -1,8 +1,7 @@
 module Main (main) where
 
 import CLI.Args (getReplFlag)
-import qualified Data.Map as Map
-import Lang.Repl.Env (ReplEnv (..))
+import Lang.Repl.Env (loadReplEnv)
 import Lang.Repl.Repl (repl)
 
 -- Change to debug flags if requiring debug mode (Shows tokens and ast, and pretty prints stuff)
@@ -12,4 +11,4 @@ import Lang.Repl.Repl (repl)
 main :: IO ()
 main = do
   flag <- getReplFlag
-  repl (ReplEnv {programEnv = Map.empty, replFlags = flag})
+  repl =<< loadReplEnv flag
