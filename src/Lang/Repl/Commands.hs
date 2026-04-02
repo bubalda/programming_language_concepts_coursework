@@ -40,8 +40,6 @@ handleCommand rEnv line = do
     [":ast", val] -> setFlag (\f b -> f {showAST = b}) "Show AST" val rEnv'
     [":evalPretty"] -> showFlag (\f -> prettyEval f) "Prettify Evaluator Result" rEnv'
     [":evalPretty", val] -> setFlag (\f b -> f {prettyEval = b}) "Prettify Evaluator Result" val rEnv'
-    [":semicolonEnd"] -> showFlag (\f -> semicolonEnd f) "Auto apply ending semicolon on command line" rEnv'
-    [":semicolonEnd", val] -> setFlag (\f b -> f {semicolonEnd = b}) "Auto apply ending semicolon on command line" val rEnv'
     [":env"] -> displayEnv rEnv' >> return rEnv'
     [":history"] -> displayHistory rEnv' >> return rEnv'
     [":reset"] -> putSuccessRepl "Cleared saved variables and history." >> return (resetReplState rEnv')
@@ -81,11 +79,10 @@ displayHelp = do
       "  :tokens [on|off]          Show lexer output",
       "  :ast [on|off]             Show parser output",
       "  :evalPretty [on|off]      Pretty print evaluation results",
-      "  :semicolonEnd [on|off]    Auto-append semicolons in REPL input",
       "  :env                      Show saved variables",
       "  :history                  Show command history",
       "  :reset                    Clear saved variables and history",
-      "  Use a trailing \\ to continue onto the next line, remember to add ; for the end of each line"
+      "  Use a trailing \\ to continue onto the next line, and end each statement with ;"
     ]
   putInfoRepl ""
 

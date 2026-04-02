@@ -240,9 +240,9 @@ Type
 {
 -- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
-parseError [] = Left "<PARSER ERROR> -- Unexpected end of input. Did you end with a ';'?"
+parseError [] = Left "<PARSER ERROR> -- Unexpected end of input. Did you finish your code?"
 parseError ((Token TokSemiColon (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected end of line. Tips: Did you finish your code?"
-parseError ((Token tt (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected token `" ++ show tt ++ "`. Tips: Use semicolons (;) to separate between lines of code."
+parseError ((Token tt (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected token `" ++ show tt ++ "`. Tips: Check whether the expression is complete and in the right order."
 
 -- Run the happy generated parser to get the ast
 runParser :: String -> [Token] -> Either String [Stmt]

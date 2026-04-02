@@ -6,7 +6,6 @@ import Lang.Eval.Eval (evalStmt, runEval)
 import Lang.Eval.Print (printEval, printEvalPretty)
 import Lang.Lexer.Helper (printTokens)
 import Lang.Lexer.Lexer (runLexer)
-import Lang.Lexer.Tokens (Token (..), TokenPos (..), TokenType (TokSemiColon))
 import Lang.Parser.Expr (Stmt)
 import Lang.Parser.Helper (printAST)
 import Lang.Parser.Parser (runParser)
@@ -28,9 +27,8 @@ runLine rEnv execLine = do
       if (length tokens < 2)
         then return rEnv
         else
-          -- Provides a ending semicolon to mimic python's repl
           -- Parse --
-          case runParser execLine (endSemicolon tokens) of
+          case runParser execLine tokens of
             Left err -> errReturn err rEnv -- Parse error
             Right stmts -> do
               when ((showAST . replFlags) rEnv) $ liftIO $ printAST stmts
@@ -39,13 +37,6 @@ runLine rEnv execLine = do
     -- Show error, and reprompt a new line with current env
     errReturn :: String -> ReplEnv -> InputT IO ReplEnv
     errReturn err envState = putErrorRepl err >> return envState
-
-    endSemicolon tokens =
-      let lastTok = last tokens
-          lastPos = tokenPos lastTok
-       in if (tokenType lastTok /= TokSemiColon && (semicolonEnd . replFlags) rEnv)
-            then tokens ++ [Token {tokenType = TokSemiColon, tokenPos = (TokenPos {line = (line lastPos), column = (column lastPos + 1)})}]
-            else tokens
 
     -- Evaluate --
     evalLoop :: ReplEnv -> [Stmt] -> Int -> InputT IO ReplEnv

@@ -26,8 +26,7 @@ data ReplFlags = ReplFlags
   { debugMode :: Bool,
     showTokens :: Bool,
     showAST :: Bool,
-    prettyEval :: Bool,
-    semicolonEnd :: Bool
+    prettyEval :: Bool
   }
 
 -- Settings used for debugging.
@@ -37,8 +36,7 @@ debugFlags =
     { debugMode = True,
       showTokens = True,
       showAST = True,
-      prettyEval = True,
-      semicolonEnd = True
+      prettyEval = True
     }
 
 -- Settings used for release.
@@ -48,8 +46,7 @@ releaseFlags =
     { debugMode = False,
       showTokens = False,
       showAST = False,
-      prettyEval = False,
-      semicolonEnd = True
+      prettyEval = False
     }
 
 envFileName :: FilePath
