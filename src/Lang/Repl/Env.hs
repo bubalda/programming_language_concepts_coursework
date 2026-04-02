@@ -7,7 +7,6 @@ module Lang.Repl.Env
     saveReplState,
     rememberHistory,
     resetReplState,
-    historyFilePath,
   )
 where
 
@@ -56,27 +55,18 @@ releaseFlags =
 envFileName :: FilePath
 envFileName = ".c2repl-env"
 
-historyFileName :: FilePath
-historyFileName = ".c2repl-history"
-
-stateHistoryFileName :: FilePath
-stateHistoryFileName = ".c2repl-state-history"
-
 loadReplEnv :: ReplFlags -> IO ReplEnv
 loadReplEnv flag = do
   savedEnv <- loadSerialized envFileName Map.empty
-  savedHistory <- loadSerialized stateHistoryFileName []
   pure
     ReplEnv
       { programEnv = savedEnv,
         replFlags = flag,
-        replHistory = savedHistory
+        replHistory = []
       }
 
 saveReplState :: ReplEnv -> IO ()
-saveReplState rEnv = do
-  writeFile envFileName (show (programEnv rEnv))
-  writeFile stateHistoryFileName (show (replHistory rEnv))
+saveReplState rEnv = writeFile envFileName (show (programEnv rEnv))
 
 rememberHistory :: String -> ReplEnv -> ReplEnv
 rememberHistory line rEnv =
@@ -88,9 +78,6 @@ resetReplState rEnv =
     { programEnv = Map.empty,
       replHistory = []
     }
-
-historyFilePath :: IO FilePath
-historyFilePath = pure historyFileName
 
 loadSerialized :: Read a => FilePath -> a -> IO a
 loadSerialized path fallback =

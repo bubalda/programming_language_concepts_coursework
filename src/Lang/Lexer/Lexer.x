@@ -2,6 +2,7 @@
 module Lang.Lexer.Lexer (runLexer) where
 import Lang.Lexer.Tokens (TokenType (..), TokenPos (..), Token (..))
 import Lang.Repl.Helper (formatPos)
+import Data.Char (isAscii)
 import Text.Read (readMaybe)
 }
 
@@ -201,9 +202,18 @@ runLexer input = case runAlex input scanTokens of
         goErr (_:xs) = goErr xs
 
     formatPosMsg (TokenPos l c) s =
-      formatPos l c
-      ++ "<LEXER ERROR> -- Could not tokenize string "
-      ++ show s
+      formatPos l c ++ formatUnexpectedToken s
+
+formatUnexpectedToken :: String -> String
+formatUnexpectedToken s
+  | any (not . isAscii) s =
+      "<LEXER ERROR> -- Unexpected non-ASCII character "
+        ++ show s
+        ++ ". Please use supported ASCII syntax only."
+  | otherwise =
+      "<LEXER ERROR> -- Unexpected character "
+        ++ show s
+        ++ "."
 
 -- For nested comments
 data AlexUserState = AlexUserState

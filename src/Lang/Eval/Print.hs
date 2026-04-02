@@ -5,7 +5,8 @@ module Lang.Eval.Print
   )
 where
 
-import Lang.Eval.Types (Value(..))
+import Data.List (intercalate)
+import Lang.Eval.Types (Value (..))
 import Lang.Repl.Helper (putSuccessLn, wrapSection)
 
 renderEval :: Value -> String
@@ -13,8 +14,9 @@ renderEval (VBool b) = show b
 renderEval (VInt i) = show i
 renderEval (VChar v) = show v
 renderEval (VFloat f) = show f
+renderEval (VDouble d) = show d
 renderEval (VString s) = s
-renderEval (VList xs) = show xs
+renderEval (VList xs) = "[" ++ intercalate ", " (map renderEval xs) ++ "]"
 renderEval VNull = "null"
 
 -- For REPL

@@ -3,7 +3,7 @@ module Lang.Repl.Repl (repl) where
 import Control.Monad.IO.Class (liftIO)
 import Data.List (isPrefixOf)
 import Lang.Repl.Commands (commandPrefix, handleCommand)
-import Lang.Repl.Env (ReplEnv, historyFilePath, rememberHistory, saveReplState)
+import Lang.Repl.Env (ReplEnv, rememberHistory, saveReplState)
 import Lang.Repl.Helper
   ( isBlankLine,
     normalizeLeadingColon,
@@ -15,7 +15,6 @@ import Lang.Repl.Helper
 import Lang.Repl.Runner (runLine)
 import System.Console.Haskeline
   ( InputT,
-    Settings (..),
     defaultSettings,
     getInputLine,
     runInputT,
@@ -24,9 +23,8 @@ import System.Console.Haskeline
 -- Allows users to type commands and run it interactively.
 repl :: ReplEnv -> IO ()
 repl replEnv = do
-  histPath <- historyFilePath
   replWelcome
-  runInputT (defaultSettings {historyFile = Just histPath}) (loop replEnv)
+  runInputT defaultSettings (loop replEnv)
   where
     loop :: ReplEnv -> InputT IO ()
     loop rEnv = do

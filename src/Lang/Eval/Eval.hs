@@ -5,10 +5,10 @@ import Data.Char (toLower)
 import Data.Functor.Identity (Identity (runIdentity))
 import Data.List (foldl1', group, sort)
 import qualified Data.Map as Map
-import Lang.Eval.Errors (expectVBool, expectVInt, expectVList, expectVNumeric)
+import Lang.Eval.Errors (expectVBool, expectVInt, expectVList, expectVNumeric, formatTypedValue)
 import Lang.Eval.Op (applyAssignOp, calcBinOp)
 import Lang.Eval.Types (EvalM, ProgramEnv, Value (..))
-import Lang.Parser.Expr (Expr (..), Slice (..), Stmt (..), TwoExprOperator (..))
+import Lang.Parser.Expr (Expr (..), Slice (..), Stmt (..), TwoExprOperator (..), Type (..))
 
 -- Run evaluator
 runEval :: EvalM a -> Either String a
@@ -40,8 +40,11 @@ evalStmt env stmt =
         else case elseStmt of
           Just s -> evalStmt env s
           Nothing -> return (env, VNull)
-    
-    Decl typ str expr -> do throwError "Declaration Not implemented" -- TODO do this
+    Decl typ str expr -> do
+      val <- evalExpr env expr
+      casted <- castToType typ val
+      let env' = Map.insert str casted env
+      return (env', casted)
 
 -- Evaluation of expressions
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
@@ -51,7 +54,7 @@ evalExpr env expr =
     BoolLit n -> return $ VBool n
     IntLit n -> return $ VInt n
     FloatLit n -> return $ VFloat n
-    DoubleLit n -> throwError $ "Double Not implemented"
+    DoubleLit n -> return $ VDouble n
     CharLit n -> return $ VChar n
     StringLit n -> return $ VString n
     Var v ->
@@ -60,7 +63,7 @@ evalExpr env expr =
         Nothing ->
 
           if map toLower v == "e"
-            then return $ VFloat (exp 1)
+            then return $ VDouble (exp 1)
             else throwError ("Undefined identifier: " ++ v)
     Let name bindExpr bodyExpr -> do
       bindVal <- eval bindExpr
@@ -78,7 +81,9 @@ evalExpr env expr =
       va <- eval a
       case va of
         VInt x -> return $ VInt (-x)
-        _ -> VFloat . negate <$> expectVNumeric va
+        VFloat x -> return $ VFloat (-x)
+        VDouble x -> return $ VDouble (-x)
+        _ -> VDouble . negate <$> expectVNumeric va
     Not a -> do
       va <- eBool a
       return $ VBool (not va)
@@ -215,17 +220,17 @@ paramError f x t = "ParamError: The function `" ++ f ++ "` expects exactly "++ s
     withType :: String 
     withType = if (length t /= 0) then (" with type " ++ t ++ ".") else "."
 
-unaryFloat :: String -> [Value] -> (Float -> Either String Float) -> EvalM Value
+unaryFloat :: String -> [Value] -> (Double -> Either String Double) -> EvalM Value
 unaryFloat name args f =
   case args of
     [x] -> do
       vx <- expectVNumeric x
       case f vx of
         Left err -> throwError err
-        Right out -> pureFloat name out
+        Right out -> pureDouble name out
     _ -> throwError (paramError name 1 "")
 
-binaryFloat :: String -> [Value] -> (Float -> Float -> Either String Float) -> EvalM Value
+binaryFloat :: String -> [Value] -> (Double -> Double -> Either String Double) -> EvalM Value
 binaryFloat name args f =
   case args of
     [a, b] -> do
@@ -233,7 +238,7 @@ binaryFloat name args f =
       y <- expectVNumeric b
       case f x y of
         Left err -> throwError err
-        Right out -> pureFloat name out
+        Right out -> pureDouble name out
     _ -> throwError (paramError name 2 "")
 
 unaryInt :: String -> [Value] -> (Int -> Either String Int) -> EvalM Value
@@ -257,17 +262,17 @@ binaryInt name args f =
         Right out -> return $ VInt out
     _ -> throwError (paramError name 2 "integer")
 
-pureFloat :: String -> Float -> EvalM Value
-pureFloat name x
+pureDouble :: String -> Double -> EvalM Value
+pureDouble name x
   | isNaN x || isInfinite x = throwError (name ++ ": invalid numeric result")
-  | otherwise = return (VFloat x)
+  | otherwise = return (VDouble x)
 
-reciprocalSafe :: String -> Float -> Either String Float
+reciprocalSafe :: String -> Double -> Either String Double
 reciprocalSafe fn x
   | abs x < 1e-7 = Left (fn ++ ": undefined for this input")
   | otherwise = Right (1 / x)
 
-toFloatListArgs :: String -> [Value] -> EvalM [Float]
+toFloatListArgs :: String -> [Value] -> EvalM [Double]
 toFloatListArgs fn args =
   case args of
     [VList xs] -> mapM expectVNumeric xs
@@ -328,7 +333,7 @@ fnMean :: [Value] -> EvalM Value
 fnMean args = do
   xs <- toFloatListArgs "mean" args
   ensureNonEmpty "mean" xs
-  pureFloat "mean" (sum xs / fromIntegral (length xs))
+  pureDouble "mean" (sum xs / fromIntegral (length xs))
 
 fnMedian :: [Value] -> EvalM Value
 fnMedian args = do
@@ -341,7 +346,7 @@ fnMedian args = do
         if odd n
           then ys !! m
           else (ys !! (m -1) + ys !! m) / 2
-  pureFloat "median" out
+  pureDouble "median" out
 
 fnMode :: [Value] -> EvalM Value
 fnMode args = do
@@ -350,30 +355,30 @@ fnMode args = do
   let groups = group (sort xs)
       best = foldl1' (\a b -> if length a >= length b then a else b) groups
   case best of
-    (v : _) -> return $ VFloat v
+    (v : _) -> return $ VDouble v
     [] -> throwError "mode: empty input"
 
 fnSum :: [Value] -> EvalM Value
 fnSum args = do
   xs <- toFloatListArgs "sum" args
-  pureFloat "sum" (sum xs)
+  pureDouble "sum" (sum xs)
 
 fnProduct :: [Value] -> EvalM Value
 fnProduct args = do
   xs <- toFloatListArgs "product" args
-  pureFloat "product" (product xs)
+  pureDouble "product" (product xs)
 
 fnMin :: [Value] -> EvalM Value
 fnMin args = do
   xs <- toFloatListArgs "min" args
   ensureNonEmpty "min" xs
-  pureFloat "min" (minimum xs)
+  pureDouble "min" (minimum xs)
 
 fnMax :: [Value] -> EvalM Value
 fnMax args = do
   xs <- toFloatListArgs "max" args
   ensureNonEmpty "max" xs
-  pureFloat "max" (maximum xs)
+  pureDouble "max" (maximum xs)
 
 fnStddev :: [Value] -> EvalM Value
 fnStddev args = do
@@ -381,7 +386,7 @@ fnStddev args = do
   ensureNonEmpty "stddev" xs
   let m = sum xs / fromIntegral (length xs)
       variance = sum (map (\x -> (x - m) * (x - m)) xs) / fromIntegral (length xs)
-  pureFloat "stddev" (sqrt variance)
+  pureDouble "stddev" (sqrt variance)
 
 ensureNonEmpty :: String -> [a] -> EvalM ()
 ensureNonEmpty fn xs =
@@ -428,12 +433,12 @@ fib n
     go k a b = go (k -1) b (a + b)
 
 -- Similar to Lanczos
-gamma :: Float -> Either String Float
+gamma :: Double -> Either String Double
 gamma zf =
-  let z = realToFrac zf :: Double
+  let z = zf
    in if z <= 0 && abs (z - fromIntegral (round z :: Int)) < 1e-12
         then Left "gamma: undefined for non-positive integers"
-        else Right (realToFrac (gammaLanczos z))
+        else Right (gammaLanczos z)
 
 gammaLanczos :: Double -> Double
 gammaLanczos z
@@ -498,3 +503,40 @@ sliceList env xs (Slice mStart mStop mStep) = do
           if start >= stop then [] else [start, start + stepSize .. stop -1]
       | otherwise =
           if start <= stop then [] else [start, start + stepSize .. stop +1]
+
+castToType :: Type -> Value -> EvalM Value
+castToType typ val =
+  case typ of
+    TInt ->
+      case val of
+        VInt n -> return (VInt n)
+        VFloat n -> return (VInt (truncate n))
+        VDouble n -> return (VInt (truncate n))
+        _ -> throwError (castError "Int" val)
+    TFloat ->
+      case val of
+        VInt n -> return (VFloat (fromIntegral n))
+        VFloat n -> return (VFloat n)
+        VDouble n -> return (VFloat (realToFrac n))
+        _ -> throwError (castError "Float" val)
+    TDouble ->
+      case val of
+        VInt n -> return (VDouble (fromIntegral n))
+        VFloat n -> return (VDouble (realToFrac n))
+        VDouble n -> return (VDouble n)
+        _ -> throwError (castError "Double" val)
+    TBool ->
+      case val of
+        VBool b -> return (VBool b)
+        _ -> throwError (castError "Bool" val)
+    TChar ->
+      case val of
+        VChar c -> return (VChar c)
+        _ -> throwError (castError "Char" val)
+    TString ->
+      case val of
+        VString s -> return (VString s)
+        _ -> throwError (castError "String" val)
+  where
+    castError targetType badValue =
+      "Type error: declaration expects `" ++ targetType ++ "`, but got " ++ formatTypedValue badValue ++ "."

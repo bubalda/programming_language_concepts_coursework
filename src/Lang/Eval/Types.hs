@@ -12,6 +12,7 @@ data Value
   | VInt Int
   | VBool Bool
   | VFloat Float
+  | VDouble Double
   | VChar Char
   | VString String
   | VList [Value]

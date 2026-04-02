@@ -6,10 +6,11 @@ module Lang.Eval.Op
 where
 
 import Data.Bits (Bits (shiftL, shiftR, xor), (.&.), (.|.))
+import Data.Maybe (isJust)
+import Control.Monad.Except (throwError)
+import Lang.Eval.Errors (expectVBoolIn, expectVIntIn, expectVNumericIn)
 import Lang.Eval.Types (EvalM, Value (..))
 import Lang.Parser.Expr (AssignOperator (..), TwoExprOperator (..))
-import Lang.Eval.Errors (expectVBool, expectVInt, expectVNumeric)
-import Control.Monad.Except (throwError)
 
 -- Evaluator
 applyAssignOp :: AssignOperator -> Value -> Value -> EvalM Value
@@ -37,10 +38,10 @@ calcBinOp op a b =
     Sub -> numBinOp (-) (-)
     Mul -> numBinOp (*) (*)
     Div -> do
-      y <- expectVNumeric b
+      y <- expectNumericOperand "right-hand side" b
       if abs y < 1e-7
         then throwError "Division by zero"
-        else numBinOp div (/) 
+        else numBinOp div (/)
     Mod -> intBinOpSafe mod "Modulo by zero"
 
     -- Bit operations
@@ -61,40 +62,88 @@ calcBinOp op a b =
     Or -> logicOr
     
   where
+    opLabel = "operator (" ++ operatorSymbol op ++ ")"
+
     intBinOp f = do
-      x <- expectVInt a
-      y <- expectVInt b
+      x <- expectIntegerOperand "left-hand side" a
+      y <- expectIntegerOperand "right-hand side" b
       return $ VInt (f x y)
 
     intBinOpSafe f err = do
-      x <- expectVInt a
-      y <- expectVInt b
+      x <- expectIntegerOperand "left-hand side" a
+      y <- expectIntegerOperand "right-hand side" b
       if y == 0 then throwError err else return $ VInt (f x y)
 
     numBinOp fInt fFloat = case (a, b) of
       (VInt x, VInt y) -> return $ VInt (fInt x y)
       _ -> do
-        x <- expectVNumeric a
-        y <- expectVNumeric b
-        return $ VFloat (fFloat x y)
+        x <- expectNumericOperand "left-hand side" a
+        y <- expectNumericOperand "right-hand side" b
+        return $ numericResult (fFloat x y)
 
     cmpNum f = do
-      x <- expectVNumeric a
-      y <- expectVNumeric b
+      x <- expectNumericOperand "left-hand side" a
+      y <- expectNumericOperand "right-hand side" b
       return $ VBool (f x y)
 
-    cmpEq shouldEq = case (a, b) of
-
-      (VInt x, VFloat y) -> return $ VBool ((fromIntegral x == y) == shouldEq)
-      (VFloat x, VInt y) -> return $ VBool ((x == fromIntegral y) == shouldEq)
-      _ -> return $ VBool ((a == b) == shouldEq)
+    cmpEq shouldEq =
+      case (numericValue a, numericValue b) of
+        (Just x, Just y) -> return $ VBool ((x == y) == shouldEq)
+        _ -> return $ VBool ((a == b) == shouldEq)
 
     logicAnd = do
-      x <- expectVBool a
-      y <- expectVBool b
+      x <- expectBooleanOperand "left-hand side" a
+      y <- expectBooleanOperand "right-hand side" b
       return $ VBool (x && y)
 
     logicOr = do
-      x <- expectVBool a
-      y <- expectVBool b
+      x <- expectBooleanOperand "left-hand side" a
+      y <- expectBooleanOperand "right-hand side" b
       return $ VBool (x || y)
+
+    expectNumericOperand side = expectVNumericIn (opLabel ++ " on the " ++ side)
+    expectIntegerOperand side = expectVIntIn (opLabel ++ " on the " ++ side)
+    expectBooleanOperand side = expectVBoolIn (opLabel ++ " on the " ++ side)
+
+    numericValue :: Value -> Maybe Double
+    numericValue (VInt x) = Just (fromIntegral x)
+    numericValue (VFloat x) = Just (realToFrac x)
+    numericValue (VDouble x) = Just x
+    numericValue _ = Nothing
+
+    numericResult :: Double -> Value
+    numericResult out
+      | hasDouble = VDouble out
+      | hasFloat = VFloat (realToFrac out)
+      | otherwise = VDouble out
+
+    hasDouble = isJust (onlyDouble a) || isJust (onlyDouble b)
+    hasFloat = isJust (onlyFloat a) || isJust (onlyFloat b)
+
+    onlyDouble (VDouble x) = Just x
+    onlyDouble _ = Nothing
+
+    onlyFloat (VFloat x) = Just x
+    onlyFloat _ = Nothing
+
+operatorSymbol :: TwoExprOperator -> String
+operatorSymbol op =
+  case op of
+    Add -> "+"
+    Sub -> "-"
+    Mul -> "*"
+    Div -> "/"
+    Mod -> "%"
+    BitAnd -> "&"
+    BitOr -> "|"
+    BitXor -> "^"
+    BitLShift -> "<<"
+    BitRShift -> ">>"
+    Eq -> "=="
+    Neq -> "!="
+    Lte -> "<="
+    Lt -> "<"
+    Gte -> ">="
+    Gt -> ">"
+    And -> "&&"
+    Or -> "||"
