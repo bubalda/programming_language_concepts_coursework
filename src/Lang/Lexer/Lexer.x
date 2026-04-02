@@ -41,7 +41,7 @@ tokens :-
 
   -- Literals
   -- Remove lookahead to read sucessfully read floats at the end of line
-  <0> @floatnumber                   { valueTokenizeSafe TokFloat "Error: Invalid float literal" }
+  <0> @floatnumber                   { valueTokenizeSafe TokDouble "Error: Invalid float literal" }
   <0> $digit+                        { valueTokenize TokInt }
   <0> \'($char|\\.)\'                { valueTokenize TokChar }
   <0> \"($stringChar|\\.)*\"         { valueTokenize TokString }
@@ -116,6 +116,14 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
     -- code arrangement errors
     getToken :: String -> TokenType
     getToken s = case s of
+      -- Static type declaration
+      "double"  -> TokDeclDouble
+      "char"    -> TokDeclChar
+      "String"  -> TokDeclString
+      "float"   -> TokDeclFloat
+      "int"     -> TokDeclInt
+      "bool"    -> TokDeclBool
+
       -- Constants and Literals
       "pi"       -> TokFloat pi
       "null"     -> TokNull
@@ -152,7 +160,7 @@ tokenize tt (pos, _, _, str) len = pure $ Token (tt (take len str)) (getTokenPos
 simpleTokenize :: TokenType -> AlexInput -> Int -> Alex Token
 simpleTokenize tt = tokenize (const tt)
 
--- Returns value as an Int (enforced by type signature)
+-- Returns value as their respective types (enforced by type signature)
 valueTokenize :: Read a => (a -> TokenType) -> AlexInput -> Int -> Alex Token
 valueTokenize tt = tokenize (tt . read)
 
@@ -231,7 +239,4 @@ endComment _ _ = do
       then alexSetStartCode 0 
       else alexSetStartCode comment
     alexMonadScan -- looks for the next token after end comment
-
 }
-
--- TODO What is sequences? Waiting for reply

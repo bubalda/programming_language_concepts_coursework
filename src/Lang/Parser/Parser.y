@@ -3,7 +3,7 @@
 module Lang.Parser.Parser (runParser) where
 import Lang.Lexer.Tokens (Token(..), TokenType(..), TokenPos(..))
 import Lang.Parser.Helper (parserIgnore, formatRenderError)
-import Lang.Parser.Expr (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator(..), Slice(..))
+import Lang.Parser.Expr (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator(..), Slice(..), Type(..))
 import Lang.Repl.Helper (formatPos)
 }
 
@@ -13,11 +13,20 @@ import Lang.Repl.Helper (formatPos)
 %error { parseError }                         -- My parse error handler name
 
 %token
+  -- Static type declaration
+  t_double                       { Token TokDeclDouble      _ }        
+  t_char                         { Token TokDeclChar        _ }        
+  t_string                       { Token TokDeclString      _ }        
+  t_float                        { Token TokDeclFloat       _ }       
+  t_int                          { Token TokDeclInt         _ }       
+  t_bool                         { Token TokDeclBool        _ }        
+
   -- Constants and Literals
   null                           { Token TokNull            _ }
   bool                           { Token (TokBool $$)       _ }
   int                            { Token (TokInt $$)        _ }
   float                          { Token (TokFloat $$)      _ }
+  double                         { Token (TokDouble $$)     _ }
   char                           { Token (TokChar $$)       _ }
   string                         { Token (TokString $$)     _ }
 
@@ -126,6 +135,7 @@ Stmt
   | ident '=' Expr ';'                           { Assign $1 $3 }                      -- x = 10 (Dynamic read type)
   | ident AssignOp Expr ';'                      { AssignOp $2 $1 $3 }                 -- x += 10, x *= 6 etc.
   | Expr ';'                                     { ExprStmt $1 }                       -- x
+  | Type ident '=' Expr ';'                      { Decl $1 $2 $4 }                     -- double x = 1.23
 
 
 -- Couple logic together since parameters and precedence is similar
@@ -186,6 +196,7 @@ Primary
   | char                      { CharLit $1 }
   | bool                      { BoolLit $1 }
   | float                     { FloatLit $1 }
+  | double                    { DoubleLit $1 }
   | string                    { StringLit $1 }
   | '[' ListElems ']'         { ListLit $2 }
   | '[' Expr '..' Expr ']'    { ListRange $2 $4 }
@@ -217,6 +228,14 @@ FunctionArgs
 FunctionArgsList
   : Expr                        { [$1] }
   | FunctionArgsList ',' Expr   { $3 : $1 }
+
+Type
+  : t_int          { TInt }
+  | t_float        { TFloat }
+  | t_double       { TDouble }
+  | t_bool         { TBool }
+  | t_char         { TChar }
+  | t_string       { TString }
 
 {
 -- Show error when parsing, check if you initialized it in the parser

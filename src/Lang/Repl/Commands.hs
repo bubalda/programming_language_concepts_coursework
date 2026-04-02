@@ -84,7 +84,7 @@ displayHelp = do
       "  :env                      Show saved variables",
       "  :history                  Show command history",
       "  :reset                    Clear saved variables and history",
-      "  Use a trailing \\ to continue onto the next line"
+      "  Use a trailing \\ to continue onto the next line, remember to add ; for the end of each line"
     ]
   putInfoRepl ""
 

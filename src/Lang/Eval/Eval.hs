@@ -40,6 +40,8 @@ evalStmt env stmt =
         else case elseStmt of
           Just s -> evalStmt env s
           Nothing -> return (env, VNull)
+    
+    Decl typ str expr -> do throwError "Declaration Not implemented" -- TODO do this
 
 -- Evaluation of expressions
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
@@ -49,6 +51,7 @@ evalExpr env expr =
     BoolLit n -> return $ VBool n
     IntLit n -> return $ VInt n
     FloatLit n -> return $ VFloat n
+    DoubleLit n -> throwError $ "Double Not implemented"
     CharLit n -> return $ VChar n
     StringLit n -> return $ VString n
     Var v ->

@@ -21,6 +21,11 @@ data TokenType
   = TokEOF            -- End of program
   | TokError String   -- Error handled by lexer
   | TokIdent String   -- Variable names
+  
+  -- Static type declaration
+  | TokDeclBool
+  | TokDeclDouble | TokDeclFloat | TokDeclInt
+  | TokDeclChar | TokDeclString 
 
   -- Values
   | TokBool Bool | TokNull

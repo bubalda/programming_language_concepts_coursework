@@ -1,4 +1,4 @@
-module Lang.Parser.Expr (Expr (..), Stmt (..), AssignOperator(..), TwoExprOperator(..), Slice(..)) where
+module Lang.Parser.Expr (Expr (..), Stmt (..), AssignOperator (..), TwoExprOperator (..), Slice (..), Type (..)) where
 
 -- An element / expression within code
 data Expr
@@ -7,7 +7,8 @@ data Expr
   | IntLit Int -- 16
   | BoolLit Bool -- false
   | CharLit Char -- 'c'
-  | FloatLit Float -- "1.223"
+  | FloatLit Float -- Type casted
+  | DoubleLit Double -- Dynamic reading defaults all numbers with decimal points to double 1.32
   | StringLit String -- "Hello World"
   | ListLit [Expr] -- [a]
   | NullLit -- null
@@ -26,6 +27,7 @@ data Stmt
   | ExprStmt Expr
   | AssignOp AssignOperator String Expr
   | If Expr Stmt (Maybe Stmt) -- if (cond) then r = 2; else r = 3
+  | Decl Type String Expr
   deriving (Show)
 
 -- About someOp ++ '=', like +=, -= etc.
@@ -66,4 +68,13 @@ data TwoExprOperator
 
 -- x[1:7:2], like Python
 data Slice = Slice (Maybe Expr) (Maybe Expr) (Maybe Expr)
+  deriving (Show)
+
+data Type
+  = TBool
+  | TInt
+  | TFloat
+  | TDouble
+  | TChar
+  | TString
   deriving (Show)
