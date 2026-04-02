@@ -3,7 +3,7 @@ module Lang.Lexer.Helper (printTokens) where
 import Lang.Repl.Helper (wrapSection, formatPos)
 import Lang.Lexer.Tokens (Token(..), TokenType (TokEOF, TokError), TokenPos(..))
 
--- Debug printer
+-- Debug printer for tokens
 printTokens :: [Token] -> IO ()
 printTokens tokens = wrapSection "Tokens" (mapM_ printToken tokens)
   where

@@ -22,6 +22,7 @@ import Lang.Repl.Helper (putErrorRepl, putInfoRepl, putSuccessRepl, uppercase)
 import System.Console.Haskeline (InputT)
 import System.Exit (exitSuccess)
 
+-- Repl commands (like ghci)
 -- Debug mode also switches :tokens and :ast to true.
 handleCommand :: ReplEnv -> String -> InputT IO ReplEnv
 handleCommand rEnv line = do

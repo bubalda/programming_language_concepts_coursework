@@ -40,6 +40,7 @@ expectVErr expectedVal inputVal =
   let text v = typeName v
    in "Expected object with type `" ++ text expectedVal ++ "`, got type `" ++ text inputVal ++ "` instead."
 
+-- For converting value types to texts
 typeName :: Value -> String
 typeName v = case v of
   VNull -> "Null"

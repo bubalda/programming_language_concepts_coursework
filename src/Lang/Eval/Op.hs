@@ -15,6 +15,7 @@ import Control.Monad.Except (throwError)
 applyAssignOp :: AssignOperator -> Value -> Value -> EvalM Value
 applyAssignOp op old val = calcBinOp (assignToBin op) old val
 
+-- Helper function
 assignToBin :: AssignOperator -> TwoExprOperator
 assignToBin AddEq = Add
 assignToBin SubEq = Sub
@@ -27,6 +28,7 @@ assignToBin BitXorEq = BitXor
 assignToBin BitLShiftEq = BitLShift
 assignToBin BitRShiftEq = BitRShift
 
+-- a () b operators, where a and b are variables
 calcBinOp :: TwoExprOperator -> Value -> Value -> EvalM Value
 calcBinOp op a b =
   case op of
@@ -48,7 +50,7 @@ calcBinOp op a b =
     BitLShift -> intBinOp shiftL
     BitRShift -> intBinOp shiftR
 
-
+    -- Comparison
     Eq -> cmpEq True
     Neq -> cmpEq False
     Lte -> cmpNum (<=)

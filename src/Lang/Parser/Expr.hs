@@ -12,7 +12,7 @@ data Expr
   | StringLit String -- "Hello World"
   | ListLit [Expr] -- [a]
   | NullLit -- null
-  | BinOp TwoExprOperator Expr Expr
+  | BinOp TwoExprOperator Expr Expr -- a () b operators, where a and b are variables
   | Negate Expr -- -x
   | Not Expr -- !true
   | Call Expr [Expr] -- Call "function_name" [params]
@@ -24,10 +24,10 @@ data Expr
 -- A line of code
 data Stmt
   = Assign String Expr -- x = 10
-  | ExprStmt Expr
-  | AssignOp AssignOperator String Expr
+  | ExprStmt Expr -- x
+  | AssignOp AssignOperator String Expr -- x += 10
   | If Expr Stmt (Maybe Stmt) -- if (cond) then r = 2; else r = 3
-  | Decl Type String Expr
+  | Decl Type String Expr -- double x = 10
   deriving (Show)
 
 -- About someOp ++ '=', like +=, -= etc.
@@ -44,7 +44,7 @@ data AssignOperator
   | BitRShiftEq
   deriving (Show)
 
--- Operator that uses 2 numbers to return a number (int / float)
+-- Operator that uses 2 numbers to return a number (numeric type)
 data TwoExprOperator
   = Add
   | Sub
@@ -70,6 +70,7 @@ data TwoExprOperator
 data Slice = Slice (Maybe Expr) (Maybe Expr) (Maybe Expr)
   deriving (Show)
 
+-- Static Declaration types
 data Type
   = TBool
   | TInt

@@ -22,6 +22,7 @@ renderError src line col msg =
     srcLines = lines src
     srcLine = if line <= length srcLines then srcLines !! (max 0 (line - 1)) else "<source unavailable>"
 
+-- Pretty print renderError
 formatRenderError :: String -> String -> Either String [Stmt]
 formatRenderError src err =
     case break (== ':') err of

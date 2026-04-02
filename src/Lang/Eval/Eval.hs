@@ -126,8 +126,7 @@ evalExpr env expr =
       dispatchCall fnName args
 
 
--- Function dispatch
-
+-- Function dispatch calls
 dispatchCall :: String -> [Value] -> EvalM Value
 dispatchCall fn args =
   case fn of
