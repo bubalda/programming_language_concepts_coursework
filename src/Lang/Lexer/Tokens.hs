@@ -24,7 +24,7 @@ data TokenType
 
   -- Values
   | TokBool Bool | TokNull
-  | TokInt Int | TokFloat Float
+  | TokInt Int | TokFloat Float | TokDouble Double
   | TokChar Char | TokString String
 
   -- List

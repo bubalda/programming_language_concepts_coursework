@@ -25,6 +25,7 @@ $stringChar  = [^\"\\\n]
 
 -- Token matches by (Top-Down) (Long-Short)
 -- But still, place "==" before "=" to prevent reading two "=" instead of one "=="
+-- <0> are for nested comments
 tokens :-
   -- Allows nested comments
   <0>             "/*"           { startComment }   -- <Try> if x then /* Do something */ x = 2; else doElse = 1;
