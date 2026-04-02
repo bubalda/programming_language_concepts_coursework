@@ -12,15 +12,15 @@ parserIgnore _ = False
 -- Parse Error
 renderError :: String -> Int -> Int -> String -> String
 renderError src line col msg =
-  "\n[!] " ++ formatPos line col ++ msg ++ "\n" ++
-  "    | Line " ++ show line ++ ", Column " ++ show col ++ "\n" ++
+  "\n[!] " ++ formatPos (line + 1) col ++ msg ++ "\n" ++
+  "    | Line " ++ show (line + 1) ++ ", Column " ++ show col ++ "\n" ++
   "    |\n" ++
   "    | " ++ srcLine ++ "\n" ++
-  "    | " ++ replicate (col - 1) ' ' ++ "^^^^^^\n"
+  "    | " ++ replicate (max 0 (col - 1)) ' ' ++ "^^^^^^\n"
   where
     -- Guard against empty strings or out of bounds
     srcLines = lines src
-    srcLine = if line <= length srcLines then srcLines !! (line - 1) else "<source unavailable>"
+    srcLine = if line <= length srcLines then srcLines !! (max 0 (line - 1)) else "<source unavailable>"
 
 formatRenderError :: String -> String -> Either String [Stmt]
 formatRenderError src err =
