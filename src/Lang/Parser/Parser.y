@@ -55,7 +55,7 @@ import Lang.Repl.Helper (formatPos)
   '..'                           { Token TokDotDot          _ }
   '['                            { Token TokLSqBrack        _ }
   ']'                            { Token TokRSqBrack        _ }
-
+  
   -- Brackets (Precedence)
   '('                            { Token TokLBrack          _ }
   ')'                            { Token TokRBrack          _ }
@@ -91,6 +91,9 @@ import Lang.Repl.Helper (formatPos)
   'if'                           { Token TokIf              _ }
   'then'                         { Token TokThen            _ }
   'else'                         { Token TokElse            _ }
+  '{'                            { Token TokLCBrack         _ }
+  '}'                            { Token TokRCBrack         _ }
+
   'let'                          { Token TokLet             _ }
   'in'                           { Token TokIn              _ }
 
@@ -128,8 +131,8 @@ Stmts
 
 Stmt
   -- if conditions
-  : 'if' Expr 'then' Stmt %prec NO_ELSE         { If $2 $4 Nothing } 
-  | 'if' Expr 'then' Stmt 'else' Stmt           { If $2 $4 (Just $6) }
+  : 'if' Expr 'then' '{' Stmt '}' %prec NO_ELSE         { If $2 $5 Nothing }           -- if (1 == 1) then { x = 2; } else { x = 1; }
+  | 'if' Expr 'then' '{' Stmt '}' 'else' '{' Stmt '}'   { If $2 $5 (Just $9) }         -- if (1 == 1) then { x = 2; }
 
   -- Statement should separated using a semicolon (;) 
   | ident '=' Expr ';'                           { Assign $1 $3 }                      -- x = 10 (Dynamic read type)
