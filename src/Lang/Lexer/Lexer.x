@@ -129,10 +129,10 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
       "bool"    -> TokDeclBool
 
       -- Constants and Literals
-      "pi"       -> TokFloat pi
+      "pi"       -> TokDouble pi
       "null"     -> TokNull
-      "true"     -> TokBool True
-      "false"    -> TokBool False
+      "True"     -> TokBool True
+      "False"    -> TokBool False
 
       -- Control Structures Variables
       "if"       -> TokIf
