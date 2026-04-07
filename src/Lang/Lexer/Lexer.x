@@ -96,8 +96,6 @@ tokens :-
   -- Brackets
   <0> "("                            { simpleTokenize TokLBrack }
   <0> ")"                            { simpleTokenize TokRBrack }
-  <0> "{"                            { simpleTokenize TokLCurly }
-  <0> "}"                            { simpleTokenize TokRCurly }
 
   -- If condition
   <0> "{"                            { simpleTokenize TokLCBrack }
