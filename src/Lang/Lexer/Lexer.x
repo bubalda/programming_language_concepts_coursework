@@ -29,8 +29,8 @@ $stringChar  = [^\"\\\n]
 -- <0> are for nested comments
 tokens :-
   -- Allows nested comments
-  <0>             "/*"           { startComment }   -- <Try> if x then /* Do something */ x = 2; else doElse = 1;
-  <comment>       "/*"           { nestComment }    -- <Try> /* outside /* nested */ outside */
+  <0>             "/*"           { startComment }   -- TryThis> if x then { /* Do something */ x = 2; } else { doElse = 1; }
+  <comment>       "/*"           { nestComment }    -- TryThis> /* outside /* nested */ outside */
   <comment>       "*/"           { endComment }
   <comment>       .              { skip }
   <comment>       \n             { skip }
@@ -38,7 +38,6 @@ tokens :-
   -- Ignore
   <0> $white+                        ; -- As long there is one separating between tokens
   <0> "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
-
 
   -- Literals
   -- Remove lookahead to read sucessfully read floats at the end of line
@@ -100,6 +99,10 @@ tokens :-
   <0> "{"                            { simpleTokenize TokLCurly }
   <0> "}"                            { simpleTokenize TokRCurly }
 
+  -- If condition
+  <0> "{"                            { simpleTokenize TokLCBrack }
+  <0> "}"                            { simpleTokenize TokRCBrack }
+
   -- End of line
   <0> ";"                            { simpleTokenize TokSemiColon }
 
@@ -128,10 +131,10 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
       "bool"    -> TokDeclBool
 
       -- Constants and Literals
-      "pi"       -> TokFloat pi
+      "pi"       -> TokDouble pi
       "null"     -> TokNull
-      "true"     -> TokBool True
-      "false"    -> TokBool False
+      "True"     -> TokBool True
+      "False"    -> TokBool False
 
       -- Control Structures Variables
       "if"       -> TokIf
