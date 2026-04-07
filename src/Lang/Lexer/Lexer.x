@@ -97,6 +97,8 @@ tokens :-
   -- Brackets
   <0> "("                            { simpleTokenize TokLBrack }
   <0> ")"                            { simpleTokenize TokRBrack }
+  <0> "{"                            { simpleTokenize TokLCurly }
+  <0> "}"                            { simpleTokenize TokRCurly }
 
   -- End of line
   <0> ";"                            { simpleTokenize TokSemiColon }

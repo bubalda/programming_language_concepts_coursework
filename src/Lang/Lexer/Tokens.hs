@@ -44,7 +44,8 @@ data TokenType
   | TokLet | TokIn
 
   -- Scoping               
-  | TokLBrack | TokRBrack 
+  | TokLBrack | TokRBrack
+  | TokLCurly | TokRCurly
 
   -- Logical Op
   | TokNot | TokAnd | TokOr                                                                   

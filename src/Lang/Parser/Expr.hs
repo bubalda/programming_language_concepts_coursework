@@ -26,6 +26,7 @@ data Stmt
   = Assign String Expr -- x = 10
   | ExprStmt Expr -- x
   | AssignOp AssignOperator String Expr -- x += 10
+  | Block [Stmt] -- { x += 1; x += 2; }
   | If Expr Stmt (Maybe Stmt) -- if (cond) then r = 2; else r = 3
   | Decl Type String Expr -- double x = 10
   deriving (Show)

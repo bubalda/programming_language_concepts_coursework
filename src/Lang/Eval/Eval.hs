@@ -17,6 +17,7 @@ runEval ev = runIdentity (runExceptT ev)
 evalStmt :: ProgramEnv -> Stmt -> EvalM (ProgramEnv, Value)
 evalStmt env stmt =
   case stmt of
+    Block stmts -> evalBlock env stmts
     ExprStmt e -> do
       val <- evalExpr env e
       return (env, val)
@@ -45,6 +46,13 @@ evalStmt env stmt =
       casted <- castToType typ val
       let env' = Map.insert str casted env
       return (env', casted)
+  where
+    evalBlock :: ProgramEnv -> [Stmt] -> EvalM (ProgramEnv, Value)
+    evalBlock currentEnv [] = return (currentEnv, VNull)
+    evalBlock currentEnv [lastStmt] = evalStmt currentEnv lastStmt
+    evalBlock currentEnv (s : ss) = do
+      (nextEnv, _) <- evalStmt currentEnv s
+      evalBlock nextEnv ss
 
 -- Evaluation of expressions
 evalExpr :: ProgramEnv -> Expr -> EvalM Value
