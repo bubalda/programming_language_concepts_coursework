@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -43,6 +43,8 @@ library
       Lang.Repl.Helper
       Lang.Repl.Repl
       Lang.Repl.Runner
+      Lang.Syntax.Syntax
+      Lang.TypeChecker.TypeChecker
   other-modules:
       Paths_c2_compiler
   autogen-modules:
