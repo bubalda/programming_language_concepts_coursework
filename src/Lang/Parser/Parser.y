@@ -55,10 +55,12 @@ import Lang.Repl.Helper (formatPos)
   '..'                           { Token TokDotDot          _ }
   '['                            { Token TokLSqBrack        _ }
   ']'                            { Token TokRSqBrack        _ }
-  
+
   -- Brackets (Precedence)
   '('                            { Token TokLBrack          _ }
   ')'                            { Token TokRBrack          _ }
+  '{'                            { Token TokLCBrack         _ }
+  '}'                            { Token TokRCBrack         _ }
 
   -- Logical Operators
   '!'                            { Token TokNot             _ }
@@ -91,9 +93,6 @@ import Lang.Repl.Helper (formatPos)
   'if'                           { Token TokIf              _ }
   'then'                         { Token TokThen            _ }
   'else'                         { Token TokElse            _ }
-  '{'                            { Token TokLCBrack         _ }
-  '}'                            { Token TokRCBrack         _ }
-
   'let'                          { Token TokLet             _ }
   'in'                           { Token TokIn              _ }
 
@@ -131,14 +130,19 @@ Stmts
 
 Stmt
   -- if conditions
-  : 'if' Expr 'then' '{' Stmt '}' %prec NO_ELSE         { If $2 $5 Nothing }           -- if (1 == 1) then { x = 2; } else { x = 1; }
-  | 'if' Expr 'then' '{' Stmt '}' 'else' '{' Stmt '}'   { If $2 $5 (Just $9) }         -- if (1 == 1) then { x = 2; }
+  : 'if' Expr 'then' Stmt %prec NO_ELSE         { If $2 $4 Nothing } 
+  | 'if' Expr 'then' Stmt 'else' Stmt           { If $2 $4 (Just $6) }
+  | '{' BlockStmts '}'                          { Block $2 }
 
   -- Statement should separated using a semicolon (;) 
   | ident '=' Expr ';'                           { Assign $1 $3 }                      -- x = 10 (Dynamic read type)
   | ident AssignOp Expr ';'                      { AssignOp $2 $1 $3 }                 -- x += 10, x *= 6 etc.
   | Expr ';'                                     { ExprStmt $1 }                       -- x
   | Type ident '=' Expr ';'                      { Decl $1 $2 $4 }                     -- double x = 1.23
+
+BlockStmts
+  : Stmts                                        { $1 }
+  |                                              { [] }
 
 
 -- Couple logic together since parameters and precedence is similar
@@ -243,8 +247,8 @@ Type
 {
 -- Show error when parsing, check if you initialized it in the parser
 parseError :: [Token] -> Either String a
-parseError [] = Left "<PARSER ERROR> -- Unexpected end of input. Tips: Did you finish your code with a semicolon (;)?"
-parseError ((Token TokSemiColon (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected end of line."
+parseError [] = Left "<PARSER ERROR> -- Unexpected end of input. Did you finish your code?"
+parseError ((Token TokSemiColon (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected end of line. Tips: Did you finish your code?"
 parseError ((Token tt (TokenPos l c)):_) = Left $ formatPos l c ++ "<PARSER ERROR> -- Unexpected token `" ++ show tt ++ "`. Tips: Check whether the expression is complete and in the right order."
 
 -- Run the happy generated parser to get the ast

@@ -37,7 +37,7 @@ tokens :-
 
   -- Ignore
   <0> $white+                        ; -- As long there is one separating between tokens
-  <0> "///"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
+  <0> "//"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
 
   -- Literals
   -- Remove lookahead to read sucessfully read floats at the end of line
@@ -129,10 +129,10 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
       "bool"    -> TokDeclBool
 
       -- Constants and Literals
-      "pi"       -> TokFloat pi
+      "pi"       -> TokDouble pi
       "null"     -> TokNull
-      "true"     -> TokBool True
-      "false"    -> TokBool False
+      "True"     -> TokBool True
+      "False"    -> TokBool False
 
       -- Control Structures Variables
       "if"       -> TokIf
