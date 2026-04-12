@@ -44,7 +44,9 @@ library
       Lang.Repl.Repl
       Lang.Repl.Runner
       Lang.Syntax.Syntax
+      Lang.TypeChecker.Helper
       Lang.TypeChecker.TypeChecker
+      Lang.TypeChecker.Types
   other-modules:
       Paths_c2_compiler
   autogen-modules:
