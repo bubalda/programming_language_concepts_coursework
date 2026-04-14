@@ -8,7 +8,7 @@ import qualified Data.Map as Map
 import Lang.Eval.Errors (expectVBool, expectVInt, expectVList, expectVNumeric, formatTypedValue)
 import Lang.Eval.Op (applyAssignOp, calcBinOp)
 import Lang.Eval.Types (EvalM, ProgramEnv, Value (..))
-import Lang.Parser.Expr (Expr (..), Slice (..), Stmt (..), TwoExprOperator (..), Type (..))
+import Lang.Syntax.Syntax (Expr (..), Slice (..), Stmt (..), TwoExprOperator (..), Type (..))
 
 -- Run evaluator
 runEval :: EvalM a -> Either String a
@@ -545,6 +545,8 @@ castToType typ val =
       case val of
         VString s -> return (VString s)
         _ -> throwError (castError "String" val)
+        
+    _ -> throwError $ "Cannot cast to type: " ++ show typ 
   where
     castError targetType badValue =
       "Type error: declaration expects `" ++ targetType ++ "`, but got " ++ formatTypedValue badValue ++ "."

@@ -10,7 +10,7 @@ import Data.Maybe (isJust)
 import Control.Monad.Except (throwError)
 import Lang.Eval.Errors (expectVBoolIn, expectVIntIn, expectVNumericIn)
 import Lang.Eval.Types (EvalM, Value (..))
-import Lang.Parser.Expr (AssignOperator (..), TwoExprOperator (..))
+import Lang.Syntax.Syntax (AssignOperator (..), TwoExprOperator (..))
 
 -- Evaluator
 applyAssignOp :: AssignOperator -> Value -> Value -> EvalM Value

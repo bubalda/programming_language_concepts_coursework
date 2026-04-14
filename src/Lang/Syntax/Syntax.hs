@@ -1,5 +1,6 @@
 module Lang.Syntax.Syntax where
-import Data.Maybe (catMaybes)
+import Data.Char ( toLower ) 
+import qualified Data.Map as Map
 
 data Type 
     = TBool
@@ -92,15 +93,10 @@ data Stmt
     = Assign String Expr -- x = 10
     | ExprStmt Expr -- x
     | AssignOp AssignOperator String Expr -- x += 10
+    | Block [Stmt] -- { x += 1; x += 2; }
     | If Expr Stmt (Maybe Stmt) -- if (cond) then r = 2; else r = 3
     | Decl Type String Expr -- double x = 10
     deriving (Show, Eq)
-
-isAssignment :: Stmt -> Bool
-isAssignment Assign{} = True
-isAssignment AssignOp{} = True
-isAssignment Decl{} = True
-isAssignment _ = False
 
 -- Type safe functions
 data Function 
@@ -112,7 +108,7 @@ data Function
 
     -- Trigonometry
     | FSin | FCos | FTan | FAsin | FAcos | FAtan | FAtan2 
-    | FSec | FCsc | FCot | FVersin | FExsec
+    | FSec | FCsc | FCot | FVersin | FExsec 
 
     -- Log
     | FLn | FLog10 | FLog2 | FLog | FLog1p
@@ -124,108 +120,113 @@ data Function
     | FMean | FMedian | FMode | FSum | FProduct | FMin | FMax | FStddev
 
     -- Advanced Maths
-    | FSinh | FCosh | FTanh | FAcosh | FAtanh | FCsch | FCoth
+    | FSinh | FCosh | FTanh | FAcosh | FAtanh | FCsch | FCoth | FAsinh | FSech
+
 
     -- Utility
     | FLength
     deriving (Show, Eq)  
 
--- Operator hierarchy with all 7 categories (Function metadata used by typechecker)
-data FuncCategory
-    = FCCore
-    | FCPowerRoot
-    | FCTrig
-    | FCLog 
-    | FCCombinatorials
-    | FCStats
-    | FCAdvancedMaths
+-- Number of arguments that each function expects
+functionArgs :: Function -> Int
+functionArgs func =
+    case func of 
+        FAbs     -> 1
+        FCeil    -> 1
+        FFloor   -> 1
+        FRound   -> 1
+        FSign    -> 1
 
-functionCategory :: Function -> FuncCategory
-functionCategory func =
+        FSqrt    -> 1
+        FCbrt    -> 1
+        FPow     -> 2
+        FExp     -> 1
+        FSquare  -> 1
+        FCube    -> 1
+        FExp10   -> 1
+
+        FSin     -> 1
+        FCos     -> 1
+        FTan     -> 1
+        FAsin    -> 1
+        FAcos    -> 1
+        FAtan    -> 1
+        FAtan2   -> 2
+        FSec     -> 1
+        FCsc     -> 1
+        FCot     -> 1
+        FVersin  -> 1
+        FExsec   -> 1
+
+        FLn      -> 1
+        FLog10   -> 1
+        FLog2    -> 1
+        FLog     -> 2
+        FLog1p   -> 1
+
+        FFact    -> 1
+        FFact2   -> 1
+        FComb    -> 2
+        FPerm    -> 2
+        FFib     -> 1
+        FGamma   -> 1
+        FGcd     -> 2
+        FLcm     -> 2
+
+        FMean    -> 1
+        FMedian  -> 1
+        FMode    -> 1
+        FSum     -> 1
+        FProduct -> 1
+        FMin     -> 1
+        FMax     -> 1
+        FStddev  -> 1
+
+        FSinh    -> 1
+        FCosh    -> 1
+        FTanh    -> 1
+        FAcosh   -> 1
+        FAtanh   -> 1
+        FCsch    -> 1
+        FCoth    -> 1
+        FAsinh   -> 1
+        FSech    -> 1
+
+        FLength  -> 1
+
+-- Returns the type of all the built-in functions
+funcReturnType :: Function -> Type
+funcReturnType func =
     case func of
-        FAbs -> FCCore
-        FCeil -> FCCore
-        FFloor -> FCCore
-        FRound -> FCCore
-        FSign -> FCCore
+        FLength -> TInt
+        FFact   -> TInt
+        FFact2  -> TInt
+        FFib    -> TInt
+        FComb   -> TInt
+        FPerm   -> TInt
+        FGcd    -> TInt
+        FLcm    -> TInt
+        _       -> TDouble
 
-        FSqrt -> FCPowerRoot
-        FCbrt -> FCPowerRoot
-        FPow -> FCPowerRoot
-        FExp -> FCPowerRoot
-        FSquare -> FCPowerRoot
-        FCube -> FCPowerRoot
-        FExp10 -> FCPowerRoot
+funcMap :: Map.Map String Function
+funcMap = Map.fromList
+    [   ("abs", FAbs), ("ceil", FCeil), ("floor", FFloor), ("round", FRound), ("sign", FSign), 
+        ("sqrt", FSqrt), ("cbrt", FCbrt), ("pow", FPow), ("exp", FExp),
+        ("square", FSquare), ("cube", FCube), ("exp10", FExp10),
+        ("sin", FSin), ("cos", FCos), ("tan", FTan),
+        ("asin", FAsin), ("acos", FAcos), ("atan", FAtan), ("atan2", FAtan2),
+        ("sec", FSec), ("csc", FCsc), ("cot", FCot), ("versin", FVersin), ("exsec", FExsec),
+        ("ln", FLn), ("log10", FLog10), ("log2", FLog2), ("log", FLog), ("log1p", FLog1p),
+        ("fact", FFact), ("fact2", FFact2), ("comb", FComb), ("perm", FPerm), ("fib", FFib),
+        ("gamma", FGamma), ("gcd", FGcd), ("lcm", FLcm),
+        ("mean", FMean), ("median", FMedian), ("mode", FMode), ("sum", FSum), ("product", FProduct),
+        ("min", FMin), ("max", FMax), ("stddev", FStddev),
+        ("sinh", FSinh), ("cosh", FCosh), ("tanh", FTanh),
+        ("acosh", FAcosh), ("atanh", FAtanh), ("csch", FCsch), ("coth", FCoth),
+        ("asinh", FAsinh), ("sech", FSech),
+        ("length", FLength)
+    ]
 
-        FSin -> FCTrig
-        FCos -> FCTrig
-        FTan -> FCTrig
-        FAsin -> FCTrig
-        FAcos -> FCTrig
-        FAtan -> FCTrig
-        FAtan2 -> FCTrig
-        FSec -> FCTrig
-        FCsc -> FCTrig
-        FCot -> FCTrig
-        FVersin -> FCTrig
-        FExsec -> FCTrig
+funcConvertString :: String -> Maybe Function 
+funcConvertString s = Map.lookup (map toLower s) funcMap
 
-        FLn -> FCLog
-        FLog10 -> FCLog
-        FLog2 -> FCLog
-        FLog -> FCLog
-        FLog1p -> FCLog
-
-        FFact -> FCCombinatorials
-        FFact2 -> FCCombinatorials
-        FComb -> FCCombinatorials
-        FPerm -> FCCombinatorials
-        FFib -> FCCombinatorials
-        FGamma -> FCCombinatorials
-        FGcd -> FCCombinatorials
-        FLcm -> FCCombinatorials
-
-        FMean -> FCStats
-        FMedian -> FCStats
-        FMode -> FCStats
-        FSum -> FCStats
-        FProduct -> FCStats
-        FMin -> FCStats
-        FMax -> FCStats
-        FStddev -> FCStats
-
-        FSinh -> FCAdvancedMaths
-        FCosh -> FCAdvancedMaths
-        FTanh -> FCAdvancedMaths
-        FAcosh -> FCAdvancedMaths
-        FAtanh -> FCAdvancedMaths
-        FCsch -> FCAdvancedMaths
-        FCoth -> FCAdvancedMaths
-
-        FLength -> FCCore
-
--- AST helper for TypeChecker
-isAtomic :: Expr -> Bool
--- {} records wildcard
-isAtomic Var{} = True
-isAtomic IntLit{} = True
-isAtomic BoolLit{} = True
-isAtomic CharLit{} = True
-isAtomic FloatLit{} = True
-isAtomic DoubleLit{} = True
-isAtomic StringLit{} = True
-isAtomic ListLit{} = True
-isAtomic _ = False
-
-subExpr :: Expr -> [Expr]
-subExpr (Let _ e1 e2) = [e1, e2]
-subExpr (Negate e)    = [e]
-subExpr (Not e)       = [e]
-subExpr (BinOp _ e1 e2) = [e1, e2]
-subExpr (Call f args) = f:args
-subExpr (ListIndex a b) = [a, b]
-subExpr (ListSlice e (Slice s1 s2 s3)) =
-    e : catMaybes [s1,s2,s3]
-subExpr (ListRange e1 e2) = [e1, e2]
-subExpr (ListLit es) = es -- ListLit [IntLit 1, IntLit 2, IntLit 3]
-subExpr _ = []

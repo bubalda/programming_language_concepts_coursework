@@ -1,7 +1,7 @@
 module Lang.Parser.Helper (parserIgnore, renderError, formatRenderError, printAST) where
 
 import Lang.Lexer.Tokens (TokenType (TokEOF))
-import Lang.Parser.Expr ( Stmt )
+import Lang.Syntax.Syntax ( Stmt )
 import Lang.Repl.Helper (wrapSection, formatPos)
 
 -- Tokens that does not need to be evaluated

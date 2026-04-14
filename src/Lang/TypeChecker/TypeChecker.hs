@@ -4,7 +4,7 @@ import Lang.Syntax.Syntax
 import Lang.TypeChecker.Helper
 import Lang.TypeChecker.Types
 import qualified Data.Map as Map
-import Control.Monad (forM_, unless)
+import Control.Monad (forM_, unless, foldM)
 
 -- Static analysis tool. Walks through AST before the program runs
 -- TypeChecker infers the result without actually computing (compile-time)
@@ -147,8 +147,94 @@ checkExpr env expr =
 
             Right (TList elementType) -- do block final return val
 
+        Call funcExpr args -> 
+            case funcExpr of
+                Var funcName -> do
+                    -- String to function
+                    func <- case funcConvertString funcName of
+                        Just f -> Right f 
+                        Nothing -> Left (UnknownFunction funcName)
 
-        _          -> Left (UndefinedVariable "Unhandled expression type")
+                    -- Check num of arguments (aka arity)
+                    let expectedArg = functionArgs func 
+                        actualArg   = length args 
+
+                    -- log can take either 1 or 2 arguments
+                    let logArgs = expectedArg == actualArg ||
+                                (func == FLog && (actualArg == 1 || actualArg == 2))
+                    
+                    if not logArgs
+                        then Left (ArgsMismatch funcName expectedArg actualArg)
+                        else return ()
+                    
+                    argType <- mapM (checkExpr env) args
+
+                    let checkNumeric (arg, t) =
+                            if isNumeric t 
+                                then Right ()
+                            else 
+                                Left (ExpectedNumeric t arg)
+                    
+                    let checkInt (arg, t) =
+                            if t == TInt 
+                                then Right ()
+                            else 
+                                Left (ExpectedTypeInt t arg)
+                    
+                    let checkNumericList =
+                            case (args, argType) of
+                                ([_], [TList t]) | isNumeric t -> Right ()
+                                ([arg], [TList t]) -> Left (ExpectedNumeric t arg)
+                                ([arg], [t])       -> Left (ExpectedList t arg)
+                                _                  -> Left (ArgsMismatch funcName 1 actualArg)
+                    
+                    case func of
+                        FMean    -> checkNumericList
+                        FMedian  -> checkNumericList
+                        FMode    -> checkNumericList
+                        FSum     -> checkNumericList
+                        FProduct -> checkNumericList
+                        FMin     -> checkNumericList
+                        FMax     -> checkNumericList
+                        FStddev  -> checkNumericList
+
+                        FFact  -> mapM_ checkInt (zip args argType)
+                        FFact2 -> mapM_ checkInt (zip args argType) 
+                        FFib   -> mapM_ checkInt (zip args argType) 
+
+                        FComb -> mapM_ checkInt (zip args argType) 
+                        FPerm -> mapM_ checkInt (zip args argType) 
+                        FGcd  -> mapM_ checkInt (zip args argType) 
+                        FLcm  -> mapM_ checkInt (zip args argType) 
+
+                        FAbs   -> mapM_ checkNumeric (zip args argType) 
+                        FCeil  -> mapM_ checkNumeric (zip args argType) 
+                        FFloor -> mapM_ checkNumeric (zip args argType) 
+                        FRound -> mapM_ checkNumeric (zip args argType) 
+                        FSqrt  -> mapM_ checkNumeric (zip args argType) 
+                        FLog   -> mapM_ checkNumeric (zip args argType) 
+                        FExp   -> mapM_ checkNumeric (zip args argType) 
+                        FSin   -> mapM_ checkNumeric (zip args argType) 
+                        FCos   -> mapM_ checkNumeric (zip args argType) 
+                        FTan   -> mapM_ checkNumeric (zip args argType) 
+
+                        FLength -> case argType of
+                            [TList _] -> Right ()
+                            [TString] -> Right ()
+                            [t]       -> Left (ExpectedList t (args !! 0))
+                            _         -> Left (ArgsMismatch funcName 1 actualArg)
+                    
+
+                        _    -> mapM_ checkNumeric (zip args argType)
+                    
+                    Right (funcReturnType func)
+
+                
+                _ -> Left (NotFunction funcExpr)
+
+                    
+
+
 
 -- Helper functions for BinOp
 numericBinOp :: TypeEnv -> Expr -> Expr -> Either TypeError Type
@@ -232,7 +318,10 @@ checkStmt env stmt =
                 requireInt =
                     if varType == TInt && exprType == TInt
                         then Right ()
-                        else Left (ExpectedTypeInt exprType expr)
+                        else if varType /= TInt
+                            then Left (ExpectedTypeInt varType (Var name))
+                        else 
+                            Left (ExpectedTypeInt exprType expr)
 
             case op of
                 AddEq -> requireNumeric
@@ -269,3 +358,8 @@ checkStmt env stmt =
                 then Right (Map.insert name t1 env)
                 else Left (TypeMismatch t1 t2 expr)
         
+        Block stmts -> foldM checkStmt env stmts
+
+-- To type check the entire program (all the statements) 
+runCheckProgram :: [Stmt] -> Either TypeError TypeEnv
+runCheckProgram = foldM checkStmt Map.empty

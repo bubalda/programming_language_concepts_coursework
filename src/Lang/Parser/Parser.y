@@ -3,7 +3,7 @@
 module Lang.Parser.Parser (runParser) where
 import Lang.Lexer.Tokens (Token(..), TokenType(..), TokenPos(..))
 import Lang.Parser.Helper (parserIgnore, formatRenderError)
-import Lang.Parser.Expr (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator(..), Slice(..), Type(..))
+import Lang.Syntax.Syntax (Expr(..), Stmt(..), AssignOperator(..), TwoExprOperator(..), Slice(..), Type(..))
 import Lang.Repl.Helper (formatPos)
 }
 

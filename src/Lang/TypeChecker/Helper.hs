@@ -1,6 +1,8 @@
 module Lang.TypeChecker.Helper where
 
 import Lang.Syntax.Syntax
+import Lang.TypeChecker.Types
+
 
 -- Helpers for TypeChecker (Just move to TypeChecker?)
 isNumeric :: Type -> Bool
@@ -27,3 +29,16 @@ isCompatibleType t1 t2
     | t1 == t2 = True
     | isNumeric t1 && isNumeric t2 = True
     | otherwise = False
+
+
+-- Function Signatures
+data FunctionSignature =
+     FunctionSignature
+    {
+        functionName :: String, -- eg: "sqrt"
+        functionArity :: Int,   -- Num of arguments
+        functionCheckArg :: [Type] -> Either TypeError (), -- Validation func
+        funcReturn :: Type      -- The Type it returns
+    }
+
+

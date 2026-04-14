@@ -6,12 +6,13 @@ import Lang.Eval.Eval (evalStmt, runEval)
 import Lang.Eval.Print (printEval, printEvalPretty)
 import Lang.Lexer.Helper (printTokens)
 import Lang.Lexer.Lexer (runLexer)
-import Lang.Parser.Expr (Stmt)
+import Lang.Syntax.Syntax (Stmt)
 import Lang.Parser.Helper (printAST)
 import Lang.Parser.Parser (runParser)
 import Lang.Repl.Env (ReplEnv (programEnv, replFlags), ReplFlags (..))
 import Lang.Repl.Helper (putErrorRepl)
 import System.Console.Haskeline (InputT)
+import Lang.TypeChecker.TypeChecker (runCheckProgram)
 
 -- Runs the user input
 runLine :: ReplEnv -> String -> InputT IO ReplEnv
@@ -32,7 +33,13 @@ runLine rEnv execLine = do
             Left err -> errReturn err rEnv -- Parse error
             Right stmts -> do
               when ((showAST . replFlags) rEnv) $ liftIO $ printAST stmts
-              evalLoop rEnv stmts 1
+
+              -- Type Checker --
+              case runCheckProgram stmts of
+                Left typeErr -> errReturn (show typeErr) rEnv
+                Right _typeEnv -> do
+                  evalLoop rEnv stmts 1
+
   where
     -- Show error, and reprompt a new line with current env
     errReturn :: String -> ReplEnv -> InputT IO ReplEnv
