@@ -16,10 +16,12 @@ import Lang.Eval.Types (ProgramEnv)
 import System.Directory (doesFileExist, removeFile)
 import System.IO.Error (catchIOError)
 import Text.Read (readMaybe)
+import Lang.TypeChecker.Types (TypeEnv)
 
 -- Used by REPL.
 data ReplEnv = ReplEnv
   { programEnv :: ProgramEnv,
+    typeEnv :: TypeEnv,
     replFlags :: ReplFlags,
     replHistory :: [String]
   }
@@ -64,6 +66,7 @@ loadReplEnv flag = do
   pure
     ReplEnv
       { programEnv = savedEnv,
+        typeEnv = Map.empty,
         replFlags = flag,
         replHistory = []
       }
@@ -88,6 +91,7 @@ resetReplState :: ReplEnv -> ReplEnv
 resetReplState rEnv =
   rEnv
     { programEnv = Map.empty,
+      typeEnv = Map.empty,
       replHistory = []
     }
 

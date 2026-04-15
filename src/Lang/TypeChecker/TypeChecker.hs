@@ -363,3 +363,6 @@ checkStmt env stmt =
 -- To type check the entire program (all the statements) 
 runCheckProgram :: [Stmt] -> Either TypeError TypeEnv
 runCheckProgram = foldM checkStmt Map.empty
+
+envCheckProgram :: TypeEnv -> [Stmt] -> Either TypeError TypeEnv
+envCheckProgram = foldM checkStmt
