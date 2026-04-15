@@ -28,7 +28,7 @@ stack run -- --debug
 - Arithmetic Assignment operators: +=, -=, *=, /=, %=, &=, |=, ^=, <<=, >>=, =
 - Lists: [1, 2, 3]
 - List slices (Like Python): [1, 2, 3][0], [1, 2, 3][1:], [1, 2, 3][start:stop:step]
-- Texas ranges (sequences): [1..100]
+- Texas ranges: [1..100]
 - Boolean operators: !, &&, ||
 - Comparison operators: ==, !=, <=, <, >=, >
 - Bracket precedence: (1 + 2) ^ 3
