@@ -21,7 +21,7 @@ functions =
     "mean", -- average [x]
     "median", -- median [x]
     "mode", -- mode [x]
-    "sum", -- foldr (+) [x'
+    "sum", -- foldr (+) [x]
     "product", -- foldr (*) [x]
     "min", -- min [x]
     "max", -- max [x]
@@ -59,7 +59,7 @@ functions =
 
     -- Combinatorial Functions
     "fact", -- fact x
-    "fact2", -- factSquared x
+    "fact2", -- x * n-2 .. * 1
     "comb", -- combination r n
     "perm", -- permutation r n
     "gcd", -- gcd [x]

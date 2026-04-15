@@ -37,7 +37,7 @@ tokens :-
 
   -- Ignore
   <0> $white+                        ; -- As long there is one separating between tokens
-  <0> "//"[^\n]*                    ; -- Normal comments, I already wanted to do this a long time ago
+  <0> "//"[^\n]*                     ; -- Normal comments
 
   -- Literals
   -- Remove lookahead to read sucessfully read floats at the end of line
