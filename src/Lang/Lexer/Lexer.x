@@ -29,7 +29,7 @@ $stringChar  = [^\"\\\n]
 -- <0> are for nested comments
 tokens :-
   -- Allows nested comments
-  <0>             "/*"           { startComment }   -- TryThis> if x then { /* Do something */ x = 2; } else { doElse = 1; }
+  <0>             "/*"           { startComment }   -- TryThis> if x { /* Do something */ x = 2; } else { doElse = 1; }
   <comment>       "/*"           { nestComment }    -- TryThis> /* outside /* nested */ outside */
   <comment>       "*/"           { endComment }
   <comment>       .              { skip }
