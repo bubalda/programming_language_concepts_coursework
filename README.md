@@ -39,7 +39,6 @@ stack run -- --debug
 - Constants: pi, null, True, False
 - Variable name format: Starts with _ or alphabet, ends with _, alphabet or digits
 - Function call: function_name(params);
-    @jinyi Please add short explanations for less obvious functions so teammates can understand them quickly.
     - length // length(array); 
     - sinh // sinh(x);
     - cosh // hyperbolic cosine
@@ -103,7 +102,7 @@ stack run -- --debug
         - :history
         - :reset
     - UP and DOWN arrows for history
-    - repl-env stores persisted environment data between sessions
+    - .c2repl-env can be written manually to provide preset variables on the start of the program
     - \\ backslash for new line in repl
         - c2> x = 8;\
         - ... x * 2;
