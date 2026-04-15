@@ -33,6 +33,7 @@ stack run -- --debug
 - Comparison operators: ==, !=, <=, <, >=, >
 - Bracket precedence: (1 + 2) ^ 3
 - if-then-else condition (May remove the keyword then): if (1 == 1) then {r = 2; r *= 5;} else {r = 3;}, if (1 == 0) then {r = 2; r *= 5;}
+- Dynamic type declaration: x = 10 // Gets 10 :: int
 - Static type declaration: double x = 10, CHECK ALL TYPES (double, char, String, float, int, bool)
 - Scope: let x = 10 in x * 2
 - Constants: pi, null, True, False
