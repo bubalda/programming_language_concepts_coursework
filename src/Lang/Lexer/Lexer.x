@@ -136,7 +136,6 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
 
       -- Control Structures Variables
       "if"       -> TokIf
-      "then"     -> TokThen
       "else"     -> TokElse
       "let"      -> TokLet
       "in"       -> TokIn
