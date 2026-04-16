@@ -12,6 +12,7 @@ import Lang.Eval.Print (renderEval)
 import Lang.Repl.Env
   ( ReplEnv (..),
     ReplFlags (..),
+    deleteTempState,
     debugFlags,
     releaseFlags,
     rememberHistory,
@@ -108,4 +109,5 @@ quitRepl :: ReplEnv -> InputT IO ReplEnv
 quitRepl rEnv = do
   putSuccessRepl "Session saved. Goodbye!"
   liftIO (saveReplState rEnv)
+  liftIO deleteTempState
   liftIO exitSuccess

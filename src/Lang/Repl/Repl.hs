@@ -3,7 +3,7 @@ module Lang.Repl.Repl (repl) where
 import Control.Monad.IO.Class (liftIO)
 import Data.List (isPrefixOf)
 import Lang.Repl.Commands (commandPrefix, handleCommand)
-import Lang.Repl.Env (ReplEnv, rememberHistory, saveReplState)
+import Lang.Repl.Env (ReplEnv, deleteTempState, rememberHistory, saveReplState)
 import Lang.Repl.Helper
   ( isBlankLine,
     normalizeLeadingColon,
@@ -30,7 +30,9 @@ repl replEnv = do
     loop rEnv = do
       minput <- readReplInput replPrompt
       case minput of
-        Nothing -> liftIO replEOFExit
+        Nothing -> do
+          liftIO deleteTempState
+          liftIO replEOFExit
         Just rawLine
           | isBlankLine rawLine -> loop rEnv
           | commandPrefix `isPrefixOf` line -> do

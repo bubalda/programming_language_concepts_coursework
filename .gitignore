@@ -4,3 +4,5 @@ dist-newstyle
 .stack-work/
 *~
 .c2repl-*
+src\Lang\Parser\Parser.hs
+src\Lang\Lexer\Lexer.hs
