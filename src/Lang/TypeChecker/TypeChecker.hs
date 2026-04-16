@@ -294,21 +294,20 @@ checkStmt :: TypeEnv -> Stmt -> Either TypeError TypeEnv
 checkStmt env stmt = 
     case stmt of
         Assign name expr -> do
-            varType <- case Map.lookup name env of
-                Just t -> Right t
-                Nothing -> Left (UndefinedVariable name)
-
-            actualType <- checkExpr env expr
-            if isCompatibleType varType actualType
-                then Right env
-                else Left (TypeMismatch varType actualType expr)
+            actualType <- checkExpr env expr 
+            case Map.lookup name env of
+                Just varType ->
+                    if isCompatibleType varType actualType
+                        then Right env
+                        else Left (TypeMismatch varType actualType expr)
+                Nothing -> Right (Map.insert name TDynamic env)
         
         AssignOp op name expr -> do
+            exprType <- checkExpr env expr
+
             varType <- case Map.lookup name env of
                 Just t  -> Right t
-                Nothing -> Left (UndefinedVariable name)
-
-            exprType <- checkExpr env expr
+                Nothing -> Right TDynamic
 
             let requireNumeric = 
                     if isNumeric varType && isNumeric exprType

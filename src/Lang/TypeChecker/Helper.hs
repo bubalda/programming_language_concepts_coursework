@@ -9,6 +9,7 @@ isNumeric :: Type -> Bool
 isNumeric TInt = True
 isNumeric TFloat = True
 isNumeric TDouble = True
+isNumeric TDynamic = True
 isNumeric _ = False
 
 numericCoercion :: Type -> Type -> Type 
@@ -27,6 +28,8 @@ isNumericType xs
 isCompatibleType :: Type -> Type -> Bool
 isCompatibleType t1 t2 
     | t1 == t2 = True
+    | t1 == TDynamic = True
+    | t2 == TDynamic = True
     | isNumeric t1 && isNumeric t2 = True
     | otherwise = False
 

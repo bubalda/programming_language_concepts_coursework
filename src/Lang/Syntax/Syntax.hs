@@ -11,6 +11,7 @@ data Type
     | TString
     | TList Type
     | TNull
+    | TDynamic
     deriving (Show, Eq)
 
 data Expr
