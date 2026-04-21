@@ -103,4 +103,5 @@ test-suite c2-compiler-test
     , directory
     , haskeline
     , mtl
+    , hspec
   default-language: Haskell2010
