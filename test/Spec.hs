@@ -15,7 +15,6 @@ isRight (Right _) = True
 isRight _ = False
 
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
 main = hspec $ do
 
     -- CORE ARITHMETIC
