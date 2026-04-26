@@ -252,9 +252,9 @@ integerBinOp :: TypeEnv -> Expr -> Expr -> Either TypeError Type
 integerBinOp env e1 e2 = do
     t1 <- checkExpr env e1
     t2 <- checkExpr env e2
-    if t1 /= TInt
+    if not (isCompatibleType t1 TInt)
         then Left (ExpectedTypeInt t1 e1)
-    else if t2 /= TInt
+    else if not (isCompatibleType t2 TInt)
         then Left (ExpectedTypeInt t2 e2)
     else
         Right TInt
@@ -263,9 +263,9 @@ logicalBinOp :: TypeEnv -> Expr -> Expr -> Either TypeError Type
 logicalBinOp env e1 e2 = do
     t1 <- checkExpr env e1
     t2 <- checkExpr env e2
-    if t1 /= TBool
+    if not (isCompatibleType t1 TBool)
         then Left (ExpectedTypeBool t1 e1)
-    else if t2 /= TBool
+    else if not (isCompatibleType t2 TBool)
         then Left (ExpectedTypeBool t2 e2)
     else
         Right TBool  
