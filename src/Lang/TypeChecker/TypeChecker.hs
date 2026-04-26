@@ -25,10 +25,10 @@ import Control.Monad (forM_, unless, foldM)
 checkExpr :: TypeEnv -> Expr -> Either TypeError Type
 checkExpr env expr =
     case expr of 
-        -- Let Binding
+        -- | Let Binding (eg: x = 5 in x + 1, name = x, bindexpr = IntLit 5, x + 1)
         Let name bindExpr bodyExpr -> do 
-            bindType <- checkExpr env bindExpr
-            let env' = Map.insert name bindType env
+            bindType <- checkExpr env bindExpr -- | checkExpr env (IntLit 5) → Right TInt
+            let env' = Map.insert name bindType env -- | env' = {"x" → TInt}
             checkExpr env' bodyExpr
 
         -- Literals
@@ -218,11 +218,11 @@ checkExpr env expr =
                         FCos   -> mapM_ checkNumeric (zip args argType) 
                         FTan   -> mapM_ checkNumeric (zip args argType) 
 
-                        FLength -> case argType of
-                            [TList _] -> Right ()
-                            [TString] -> Right ()
-                            [t]       -> Left (ExpectedList t (args !! 0))
-                            _         -> Left (ArgsMismatch funcName 1 actualArg)
+                        FLength -> case (args, argType) of
+                            (_, [TList _]) -> Right ()
+                            (_, [TString]) -> Right ()
+                            ([arg], [t])   -> Left (ExpectedList t arg)
+                            _              -> Left (ArgsMismatch funcName 1 actualArg)
                     
 
                         _    -> mapM_ checkNumeric (zip args argType)
@@ -290,25 +290,59 @@ numericComparison env e1 e2 = do
     else 
         Right TBool
 
+getStmtType :: TypeEnv -> Stmt -> Either TypeError Type
+getStmtType env stmt =
+    case stmt of 
+        Assign _ expr -> checkExpr env expr
+
+        ExprStmt expr -> checkExpr env expr
+
+        AssignOp _ _ expr -> checkExpr env expr
+
+        Block [] -> Right TNull
+        Block stmts -> do
+            let (initStmts, lastStmt) = (init stmts, last stmts)
+            cumulativeEnv <- foldM checkStmt env initStmts
+            getStmtType cumulativeEnv lastStmt
+
+        If condition thenStmt elseStmt -> do
+
+            conditionType <- checkExpr env condition
+            if conditionType /= TBool
+                then Left (ExpectedTypeBool conditionType condition)
+                else return ()
+
+            thenType <- getStmtType env thenStmt
+
+            case elseStmt of
+                Nothing -> Right thenType
+                Just elseStatement -> do
+                    elseType <- getStmtType env elseStatement
+                    if isCompatibleType thenType elseType
+                    then Right thenType
+                    else Left (BranchTypeMismatch thenType elseType elseStatement)
+
+        Decl _ _ expr -> checkExpr env expr
+
+
 checkStmt :: TypeEnv -> Stmt -> Either TypeError TypeEnv
 checkStmt env stmt = 
     case stmt of
         Assign name expr -> do
-            varType <- case Map.lookup name env of
-                Just t -> Right t
-                Nothing -> Left (UndefinedVariable name)
-
-            actualType <- checkExpr env expr
-            if isCompatibleType varType actualType
-                then Right env
-                else Left (TypeMismatch varType actualType expr)
+            actualType <- checkExpr env expr 
+            case Map.lookup name env of
+                Just varType ->
+                    if isCompatibleType varType actualType
+                        then Right env
+                        else Left (TypeMismatch varType actualType expr)
+                Nothing -> Right (Map.insert name TDynamic env)
         
         AssignOp op name expr -> do
+            exprType <- checkExpr env expr
+
             varType <- case Map.lookup name env of
                 Just t  -> Right t
-                Nothing -> Left (UndefinedVariable name)
-
-            exprType <- checkExpr env expr
+                Nothing -> Right TDynamic
 
             let requireNumeric = 
                     if isNumeric varType && isNumeric exprType
@@ -341,12 +375,10 @@ checkStmt env stmt =
             conditionType <- checkExpr env cond 
             if conditionType /= TBool
                 then Left (ExpectedTypeBool conditionType cond)
-                else do
-                    _ <- checkStmt env thenStmt
-                    case elseStmt of 
-                        Nothing -> return ()
-                        Just stmt -> checkStmt env stmt  >> return ()
-                    Right env
+                else return ()
+
+            _ <- getStmtType env (If cond thenStmt elseStmt)
+            Right env
 
         ExprStmt expr -> do
             _         <- checkExpr env expr

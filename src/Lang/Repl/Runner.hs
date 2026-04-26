@@ -38,8 +38,8 @@ runLine rEnv execLine = do
               case envCheckProgram (typeEnv rEnv) stmts of
                 Left typeErr -> errReturn (show typeErr) rEnv
                 Right newTypeEnv -> do
-                  let rEnvTypes = rEnv { typeEnv = newTypeEnv }
-                  evalLoop rEnvTypes stmts 1
+                  let newrEnv = rEnv { typeEnv = newTypeEnv }
+                  evalLoop newrEnv stmts 1
 
   where
     -- Show error, and reprompt a new line with current env

@@ -11,54 +11,55 @@ data Type
     | TString
     | TList Type
     | TNull
+    | TDynamic
     deriving (Show, Eq)
 
 data Expr
-    -- Variables and Literals
-    = Var String -- x
-    | Let String Expr Expr -- let x = 4 in x * x, in scope
-    | IntLit Int -- 16
-    | BoolLit Bool -- false
-    | CharLit Char -- 'c'
-    | FloatLit Float -- Type casted
-    | DoubleLit Double -- Dynamic reading defaults all numbers with decimal points to double 1.32
-    | StringLit String -- "Hello World"
-    | ListLit [Expr] -- [a]
-    | NullLit -- null
+    -- | Variables and Literals
+    = Var String -- | x
+    | Let String Expr Expr -- | let x = 4 in x * x, in scope
+    | IntLit Int -- | 16
+    | BoolLit Bool -- | false
+    | CharLit Char -- | 'c'
+    | FloatLit Float -- | Type casted
+    | DoubleLit Double -- | Dynamic reading defaults all numbers with decimal points to double 1.32
+    | StringLit String -- | "Hello World"
+    | ListLit [Expr] -- | [a]
+    | NullLit -- | null
 
-    -- Binary Operations
-    | BinOp TwoExprOperator Expr Expr -- a () b operators, where a and b are variables
+    -- | Binary Operations
+    | BinOp TwoExprOperator Expr Expr -- | a () b operators, where a and b are variables
 
-    -- Unary Operations
-    | Negate Expr -- -x
-    | Not Expr -- !true
+    -- | Unary Operations
+    | Negate Expr -- | -x
+    | Not Expr -- | !true
 
-    -- Function
-    | Call Expr [Expr] -- Call "function_name" [params]
+    -- | Function
+    | Call Expr [Expr] -- | Call "function_name" [params]
 
-    -- List Operations
-    | ListIndex Expr Expr -- list[i]
-    | ListSlice Expr Slice -- list[start:stop:step]
-    | ListRange Expr Expr -- [1..100]
+    -- | List Operations
+    | ListIndex Expr Expr -- | list[i]
+    | ListSlice Expr Slice -- | list[start:stop:step]
+    | ListRange Expr Expr -- | [1..100]
     deriving (Show, Eq)
 
 
 data TwoExprOperator
-    -- Arithmetic Operators
+    -- | Arithmetic Operators
     = Add
     | Sub
     | Mul
     | Div
     | Mod
 
-    -- Bitwise Operators
+    -- | Bitwise Operators
     | BitAnd
     | BitOr
     | BitXor
     | BitLShift
     | BitRShift
 
-    -- Comparison Operators
+    -- | Comparison Operators
     | Eq
     | Neq
     | Lte
@@ -66,13 +67,13 @@ data TwoExprOperator
     | Gte
     | Gt
 
-    -- Logical Operators
+    -- | Logical Operators
     | And
     | Or
     deriving (Show, Eq)
 
 
--- Assignment Operators
+-- | Assignment Operators
 data AssignOperator 
     = AddEq 
     | SubEq
@@ -98,36 +99,36 @@ data Stmt
     | Decl Type String Expr -- double x = 10
     deriving (Show, Eq)
 
--- Type safe functions
+-- | Type safe functions
 data Function 
-    -- Core Functions
+    -- | Core Functions
     = FAbs | FCeil | FFloor | FRound | FSign 
 
-    -- Power/Root
+    -- | Power/Root
     | FSqrt | FCbrt | FPow | FExp | FSquare | FCube | FExp10
 
-    -- Trigonometry
+    -- | Trigonometry
     | FSin | FCos | FTan | FAsin | FAcos | FAtan | FAtan2 
     | FSec | FCsc | FCot | FVersin | FExsec 
 
-    -- Log
+    -- | Log
     | FLn | FLog10 | FLog2 | FLog | FLog1p
 
-    -- Combinatorics
+    -- | Combinatorics
     | FFact | FFact2 | FComb | FPerm | FFib | FGamma | FGcd | FLcm 
 
-    -- Stats 
+    -- | Stats 
     | FMean | FMedian | FMode | FSum | FProduct | FMin | FMax | FStddev
 
-    -- Advanced Maths
+    -- | Advanced Maths
     | FSinh | FCosh | FTanh | FAcosh | FAtanh | FCsch | FCoth | FAsinh | FSech
 
 
-    -- Utility
+    -- | Utility
     | FLength
     deriving (Show, Eq)  
 
--- Number of arguments that each function expects
+-- | Number of arguments that each function expects
 functionArgs :: Function -> Int
 functionArgs func =
     case func of 
@@ -194,7 +195,7 @@ functionArgs func =
 
         FLength  -> 1
 
--- Returns the type of all the built-in functions
+-- | Returns the type of all the built-in functions
 funcReturnType :: Function -> Type
 funcReturnType func =
     case func of
