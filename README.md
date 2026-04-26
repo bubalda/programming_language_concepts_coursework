@@ -1,108 +1,137 @@
-# Coursework
+# Programming Language Concepts Coursework
 
-1. Install external deps 
-```sh
-stack install alex happy
+## Overview
+
+This project implements a small custom programming language in Haskell. The goal was to build a complete pipeline starting from raw input all the way to execution, including lexical analysis, parsing, type checking, and evaluation.
+
+The system is structured similarly to a simple compiler/interpreter. It takes user input, converts it into tokens using a lexer, builds an abstract syntax tree (AST) using a parser, checks types, and then evaluates the program.
+
+The project also includes a REPL for interactive execution and a test suite to verify correctness.
+
+## Features
+
+* Variable declarations using `let`
+* Arithmetic expressions and operators
+* Type checking before evaluation
+* Expression evaluation
+* Interactive REPL
+* Error handling for invalid input
+
+
+## Architecture
+
+The program follows a clear pipeline:
+
+```
+Input → Lexer → Tokens → Parser → AST → Type Checker → Evaluator → Output
 ```
 
-2. Run program
-```sh
-stack run -- --debug
+### Components
+
+* **Lexer** (`Lexer.x`, `Tokens.hs`, `Keywords.hs`)
+  Converts raw input into tokens using Alex.
+
+* **Parser** (`Parser.y`, `Expr.hs`)
+  Builds the AST using Happy based on grammar rules.
+
+* **Syntax / AST** (`Syntax.hs`)
+  Defines the structure of expressions and statements.
+
+* **Type Checker** (`TypeChecker.hs`, `Types.hs`)
+  Ensures expressions are type-correct before execution.
+
+* **Evaluator** (`Eval.hs`, `Op.hs`)
+  Executes the program and produces results.
+
+* **REPL** (`Repl.hs`, `Runner.hs`, `Commands.hs`)
+  Allows interactive input and execution.
+
+* **CLI** (`Main.hs`, `CLI/Args.hs`)
+  Handles program entry and arguments.
+
+## Installation and Running
+
+Make sure you have Stack installed.
+
+### Build the project
+
+```
+stack build
 ```
 
-3. If VSCode intellisense won't work that means your hls / ghc version doesn't match. Try
-- HLS 2.13.0.0
-- GHC 9.10.3.0
-- And restart intellisense
+### Run the program
 
-4. Check Lang.Lexer.Keywords for available functions
+```
+stack run
+```
 
-5. SemiColons are line delimiters (;) to support one-liners
+### Run tests
 
-# Check for
-- Comments: "String x = "Hello World"; // int x = 0; // x = 0 does not run"
-- Nested comments: x  /* /* */ */ = 13; // Should work, /* /* */ does not work
-- Space and newlines are skipped
-- Prints simple values: 1, 1.23, "hello", 'h', True
-- Arithmetic / Bitwise operators: +, -, *, /, %, &, |, ^, <<, >>
-- Arithmetic Assignment operators: +=, -=, *=, /=, %=, &=, |=, ^=, <<=, >>=, =
-- Lists: [1, 2, 3]
-- List slices (Like Python): [1, 2, 3][0], [1, 2, 3][1:], [1, 2, 3][start:stop:step]
-- Texas ranges: [1..100]
-- Boolean operators: !, &&, ||
-- Comparison operators: ==, !=, <=, <, >=, >
-- Bracket precedence: (1 + 2) ^ 3
-- if-else condition : if (1 == 1) {r = 2; r *= 5;} else {r = 3;}, if (1 == 0) {r = 2; r *= 5;}
-- Dynamic type declaration: x = 10 // Gets 10 :: int
-- Static type declaration: double x = 10, CHECK ALL TYPES (double, char, String, float, int, bool)
-- Scope: let x = 10 in x * 2
-- Constants: pi, null, True, False
-- Variable name format: Starts with _ or alphabet, ends with _, alphabet or digits
-- Function call: function_name(params);
-    - length // length(array); 
-    - sinh // sinh(x);
-    - cosh // hyperbolic cosine
-    - tanh // hyperbolic tangent
-    - csch // hyperbolic cosecant = 1 / sinh(x)
-    - sech // hyperbolic secant = 1 / cosh(x)
-    - coth // hyperbolic cotangent = 1 / tanh(x)
-    - asinh // inverse hyperbolic sine
-    - acosh // inverse hyperbolic cosine, domain: x >= 1
-    - mean // arithmetic average
-    - median // middle value after sorting
-    - mode // most frequent value
-    - sum // total of all values
-    - product // multiplication of all values
-    - min // smallest value
-    - max // largest value
-    - stddev // standard deviation
-    - sqrt // square root, domain: x >= 0
-    - cbrt // cube root
-    - pow // power: pow(base, exponent)
-    - exp // e^x
-    - square // x^2
-    - cube // x^3
-    - exp10 // 10^x, e.g. exp10(3) = 1000
-    - sin // sine
-    - cos // cosine
-    - tan // tangent
-    - asin // inverse sine, domain: x in [-1, 1]
-    - acos // inverse cosine, domain: x in [-1, 1]
-    - atan // inverse tangent
-    - atan2 // atan2(y, x), returns the angle with correct quadrant info
-    - sec // secant = 1 / cos(x)
-    - csc // cosecant = 1 / sin(x)
-    - cot // cotangent = 1 / tan(x)
-    - versin // versed sine = 1 - cos(x)
-    - exsec // exsecant = sec(x) - 1
-    - ln // natural logarithm, domain: x > 0
-    - log10 // base-10 logarithm, domain: x > 0
-    - log2 // base-2 logarithm, domain: x > 0
-    - log // log10(x) or log(base, x)
-    - log1p // ln(1 + x), domain: x > -1
-    - fact // factorial: n! for non-negative integers
-    - fact2 // double factorial: n * (n-2) * (n-4) * ... (not (n!)^2)
-    - comb // combinations C(n, r)
-    - perm // permutations P(n, r)
-    - gcd // greatest common divisor
-    - lcm // least common multiple
-    - fib // nth Fibonacci number
-    - gamma // gamma function, extends factorial to non-integers
-- REPL
-    - Repl Commands (Check :? / displayHelp function and remember to test the commands)
-        - :?"
-        - :help
-        - :q
-        - :quit
-        - :debug
-        - :tokens
-        - :ast
-        - :evalPretty
-        - :env
-        - :history
-        - :reset
-    - UP and DOWN arrows for history
-    - .c2repl-env can be written manually to provide preset variables on the start of the program
-    - \\ backslash for new line in repl
-        - c2> x = 8;\
-        - ... x * 2;
+```
+stack test
+```
+
+## Usage
+
+When running the program, you can enter expressions or statements directly through the REPL.
+
+Example:
+
+```
+let x = 5;
+```
+
+The program will:
+
+1. Tokenise the input
+2. Parse it into an AST
+3. Type check it
+4. Evaluate the result
+
+---
+
+## Example
+
+Input:
+
+```
+let x = 5 + 3;
+```
+
+Process:
+
+* Tokens: `let`, `x`, `=`, `5`, `+`, `3`
+* AST: assignment with a binary operation
+* Type checking: valid (integer expression)
+* Evaluation: computes result
+
+Output:
+
+```
+x = 8
+```
+
+## Testing
+
+The project includes a test suite located in `test/Spec.hs`.
+
+Tests cover:
+
+* Parsing correctness
+* Expression evaluation
+* Type checking
+
+All tests pass successfully with no failures.
+
+## Technologies Used
+
+* Haskell
+* Alex (lexer generator)
+* Happy (parser generator)
+
+## Notes
+
+The project is designed with a modular structure, separating each stage of the pipeline. This makes it easier to debug, extend, and test individual components.
+
+Type checking is performed before evaluation to prevent invalid programs from executing.
+
