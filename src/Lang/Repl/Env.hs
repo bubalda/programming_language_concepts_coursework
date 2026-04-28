@@ -61,18 +61,17 @@ tempEnvFileName = ".c2repl-env-temp"
 
 loadReplEnv :: ReplFlags -> IO ReplEnv
 loadReplEnv flag = do
-  savedEnv <- loadSerialized envFileName Map.empty
-  writeSerialized tempEnvFileName savedEnv
+  savedEnv <- loadSerialized envFileName (Map.empty, Map.empty)
   pure
     ReplEnv
-      { programEnv = savedEnv,
-        typeEnv = Map.empty,
+      { programEnv = fst savedEnv,
+        typeEnv = snd savedEnv,
         replFlags = flag,
         replHistory = []
       }
 
 saveReplState :: ReplEnv -> IO ()
-saveReplState rEnv = writeSerialized tempEnvFileName (programEnv rEnv)
+saveReplState rEnv = writeSerialized envFileName (programEnv rEnv, typeEnv rEnv)
 
 deleteTempState :: IO ()
 deleteTempState =

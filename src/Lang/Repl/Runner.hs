@@ -9,7 +9,7 @@ import Lang.Lexer.Lexer (runLexer)
 import Lang.Syntax.Syntax (Stmt)
 import Lang.Parser.Helper (printAST)
 import Lang.Parser.Parser (runParser)
-import Lang.Repl.Env (ReplEnv (programEnv, replFlags, typeEnv), ReplFlags (..))
+import Lang.Repl.Env (ReplEnv (programEnv, replFlags, typeEnv), ReplFlags (..), saveReplState)
 import Lang.Repl.Helper (putErrorRepl)
 import System.Console.Haskeline (InputT)
 import Lang.TypeChecker.TypeChecker (envCheckProgram)
@@ -39,7 +39,9 @@ runLine rEnv execLine = do
                 Left typeErr -> errReturn (show typeErr) rEnv
                 Right newTypeEnv -> do
                   let newrEnv = rEnv { typeEnv = newTypeEnv }
-                  evalLoop newrEnv stmts 1
+                  finalEnv <- evalLoop newrEnv stmts 1
+                  _ <- liftIO $ saveReplState finalEnv
+                  return finalEnv
 
   where
     -- Show error, and reprompt a new line with current env

@@ -12,7 +12,7 @@ data Type
     | TList Type
     | TNull
     | TDynamic
-    deriving (Show, Eq)
+    deriving (Show, Eq, Read)
 
 data Expr
     -- | Variables and Literals
