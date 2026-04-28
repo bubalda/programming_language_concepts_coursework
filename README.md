@@ -13,6 +13,9 @@ The project also includes a REPL for interactive execution and a test suite to v
 ## Features
 
 - Static type declarations (`int`, `double`, `float`, `bool`, `char`, `String`)
+- Dynamic type inference — variables assigned without a type keyword are inferred automatically:
+  - `x = 10.0` → inferred as `double`
+  - `y = "hello"` → inferred as `String`
 - Arithmetic, logical, comparison, and bitwise operators
 - Compound assignment operators (`+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`)
 - `if / else` conditional expressions
