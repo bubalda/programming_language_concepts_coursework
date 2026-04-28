@@ -2,21 +2,29 @@
 
 ## Overview
 
-This project implements a small custom programming language in Haskell. The goal was to build a complete pipeline starting from raw input all the way to execution, including lexical analysis, parsing, type checking, and evaluation.
+This project implements a small custom programming language in Haskell, with a syntax **based on C**. The goal was to build a complete pipeline starting from raw input all the way to execution, including lexical analysis, parsing, type checking, and evaluation.
 
 The system is structured similarly to a simple compiler/interpreter. It takes user input, converts it into tokens using a lexer, builds an abstract syntax tree (AST) using a parser, checks types, and then evaluates the program.
 
 The project also includes a REPL for interactive execution and a test suite to verify correctness.
 
+---
+
 ## Features
 
-* Variable declarations using `let`
-* Arithmetic expressions and operators
-* Type checking before evaluation
-* Expression evaluation
-* Interactive REPL
-* Error handling for invalid input
+- Static type declarations (`int`, `double`, `float`, `bool`, `char`, `String`)
+- Arithmetic, logical, comparison, and bitwise operators
+- Compound assignment operators (`+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`)
+- `if / else` conditional expressions
+- `let ... in` expression-scoped bindings
+- List literals, ranges, indexing, and slicing
+- Built-in mathematical and statistical functions (`sin`, `cos`, `sqrt`, `mean`, `fact`, etc.)
+- Type checking before evaluation
+- Interactive REPL with command history and persistent state
+- Debug mode for inspecting the internal pipeline
+- Error reporting with line/column numbers and visual source pointers
 
+---
 
 ## Architecture
 
@@ -28,57 +36,129 @@ Input → Lexer → Tokens → Parser → AST → Type Checker → Evaluator →
 
 ### Components
 
-* **Lexer** (`Lexer.x`, `Tokens.hs`, `Keywords.hs`)
+- **Lexer** (`Lexer.x`, `Tokens.hs`, `Keywords.hs`)
   Converts raw input into tokens using Alex.
 
-* **Parser** (`Parser.y`, `Expr.hs`)
+- **Parser** (`Parser.y`, `Expr.hs`)
   Builds the AST using Happy based on grammar rules.
 
-* **Syntax / AST** (`Syntax.hs`)
+- **Syntax / AST** (`Syntax.hs`)
   Defines the structure of expressions and statements.
 
-* **Type Checker** (`TypeChecker.hs`, `Types.hs`)
+- **Type Checker** (`TypeChecker.hs`, `Types.hs`)
   Ensures expressions are type-correct before execution.
 
-* **Evaluator** (`Eval.hs`, `Op.hs`)
+- **Evaluator** (`Eval.hs`, `Op.hs`)
   Executes the program and produces results.
 
-* **REPL** (`Repl.hs`, `Runner.hs`, `Commands.hs`)
-  Allows interactive input and execution.
+- **REPL** (`Repl.hs`, `Runner.hs`, `Commands.hs`)
+  Allows interactive input and execution with persistent state.
 
-* **CLI** (`Main.hs`, `CLI/Args.hs`)
-  Handles program entry and arguments.
+- **CLI** (`Main.hs`, `CLI/Args.hs`)
+  Handles program entry and command-line arguments.
 
-## Installation and Running
+---
 
-Make sure you have Stack installed.
+## Installation
+
+### 1. Install GHCup
+
+GHCup is the recommended way to install Haskell tooling including GHC and Stack. Visit [https://www.haskell.org/ghcup/](https://www.haskell.org/ghcup/) and follow the instructions for your operating system, or run:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+```
+
+Make sure to install **Stack** when prompted during GHCup setup.
+
+### 2. Verify Stack is installed
+
+```bash
+stack --version
+```
+
+### 3. Navigate to the project directory
+
+```bash
+cd path/to/project
+```
+
+---
+
+## Building and Running
 
 ### Build the project
 
-```
+```bash
 stack build
 ```
 
-### Run the program
+### Run the REPL
 
-```
+```bash
 stack run
+```
+
+### Run in debug mode
+
+Debug mode shows the token output, AST, and evaluation details at each step:
+
+```bash
+stack run -- --debug
+```
+
+The short form `-d` also works:
+
+```bash
+stack run -- -d
 ```
 
 ### Run tests
 
-```
+```bash
 stack test
 ```
 
+### Clean build artifacts
+
+```bash
+stack clean
+```
+
+---
+
+## REPL Commands
+
+Once inside the REPL, type `:?` or `:help` to display all available commands:
+
+```
+stack run -- :?
+```
+
+| Command | Description |
+|---------|-------------|
+| `:?` / `:help` | Show the help page |
+| `:q` / `:quit` | Save state and exit |
+| `:debug [ON\|OFF]` | Toggle debug mode (shows tokens, AST, and evaluation) |
+| `:tokens [ON\|OFF]` | Show lexer token output |
+| `:ast [ON\|OFF]` | Show parser AST output |
+| `:evalPretty [ON\|OFF]` | Pretty-print evaluation results |
+| `:env` | Display all currently saved variables |
+| `:history` | Show command history |
+| `:reset` | Clear all saved variables and history |
+
+Use a trailing `\` to continue a statement onto the next line. Each statement must end with `;`.
+
+---
+
 ## Usage
 
-When running the program, you can enter expressions or statements directly through the REPL.
+When running the program, enter expressions or statements directly through the REPL.
 
 Example:
 
 ```
-let x = 5;
+int x = 5;
 ```
 
 The program will:
@@ -95,15 +175,15 @@ The program will:
 Input:
 
 ```
-let x = 5 + 3;
+int x = 5 + 3;
 ```
 
 Process:
 
-* Tokens: `let`, `x`, `=`, `5`, `+`, `3`
-* AST: assignment with a binary operation
-* Type checking: valid (integer expression)
-* Evaluation: computes result
+- Tokens: `int`, `x`, `=`, `5`, `+`, `3`, `;`
+- AST: declaration with a binary addition expression
+- Type checking: valid (`int` expression)
+- Evaluation: computes result
 
 Output:
 
@@ -111,27 +191,36 @@ Output:
 x = 8
 ```
 
+---
+
 ## Testing
 
 The project includes a test suite located in `test/Spec.hs`.
 
 Tests cover:
 
-* Parsing correctness
-* Expression evaluation
-* Type checking
+- Parsing correctness
+- Expression evaluation
+- Type checking
 
 All tests pass successfully with no failures.
 
+---
+
 ## Technologies Used
 
-* Haskell
-* Alex (lexer generator)
-* Happy (parser generator)
+- Haskell
+- Alex (lexer generator)
+- Happy (parser generator)
+- Stack (build tool)
+- GHCup (Haskell toolchain installer)
+
+---
 
 ## Notes
 
-The project is designed with a modular structure, separating each stage of the pipeline. This makes it easier to debug, extend, and test individual components.
-
-Type checking is performed before evaluation to prevent invalid programs from executing.
-
+- The language syntax is based on C, making it familiar and consistent with standard conventions
+- The project is designed with a modular structure, separating each stage of the pipeline
+- Type checking is performed before evaluation to prevent invalid programs from executing
+- Debug mode (`--debug` or `-d`) is useful for inspecting the internal pipeline at each stage
+- The REPL saves state between inputs — use `:env` to view saved variables and `:reset` to clear them
