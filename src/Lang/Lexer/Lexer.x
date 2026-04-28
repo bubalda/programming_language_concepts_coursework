@@ -130,6 +130,7 @@ identTokenize inp@(_, _, _, str) len = tokenize (\_ -> getToken (take len str)) 
 
       -- Constants and Literals
       "pi"       -> TokDouble pi
+      "e"        -> TokDouble (exp 1)
       "null"     -> TokNull
       "True"     -> TokBool True
       "False"    -> TokBool False
