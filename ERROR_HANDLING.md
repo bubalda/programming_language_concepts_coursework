@@ -6,6 +6,37 @@ This document describes how errors are handled throughout the system. Errors can
 
 The project is designed to detect errors as early as possible, preventing invalid programs from being executed.
 
+---
+
+## Error Reporting
+
+When an error occurs, the system reports:
+
+- The **type** of error (lexical, syntax, type, or runtime)
+- The **line and column number** where the error was detected
+- A **visual position indicator** that highlights exactly where in the source code the error occurred
+
+### Error Output Format
+
+```
+Line 3, Column 7:
+    Print(;
+          ^
+<PARSER ERROR> -- Unexpected token ';'
+```
+
+The `^` character points directly to the position of the fault in the source line. For longer invalid spans, multiple carets are used:
+
+```
+Line 1, Column 9:
+    let x = @value;
+            ^^^^^^
+<LEXER ERROR> -- Unexpected character '@'.
+```
+
+This format makes it immediately clear where the error occurred, significantly reducing debugging time.
+
+---
 
 ## Types of Errors
 
@@ -15,16 +46,32 @@ The project is designed to detect errors as early as possible, preventing invali
 
 These occur when the input contains characters or patterns that cannot be recognised as valid tokens.
 
-#### Examples
+#### Causes
+
+- Unrecognised characters (e.g. `@`, `#`)
+- Non-ASCII characters in source input
+- Unclosed block comments (e.g. `/* opened but never closed`)
+
+#### Example
 
 ```
-Input:  let x = 5 @
+Input:  let x = 5 @;
+```
+
+#### Output
+
+```
+Line 1, Column 11:
+    let x = 5 @;
+              ^
+<LEXER ERROR> -- Unexpected character '@'.
 ```
 
 #### Behaviour
 
-* The lexer fails to match the invalid character
-* An error is reported indicating an unknown token
+- The lexer fails to match the invalid token
+- An error is reported with line, column, and a visual pointer
+- Non-ASCII characters are detected and reported with a specific message
 
 
 ### 2. Syntax Errors
@@ -33,100 +80,199 @@ Input:  let x = 5 @
 
 These occur when the sequence of tokens does not follow the grammar rules of the language.
 
-#### Examples
+#### Causes
+
+- Missing operands (e.g. `let x = ;`)
+- Unclosed brackets or braces
+- Unexpected end of input
+
+#### Example
 
 ```
-Input:  let x = ;
+Input:  Print(;
+```
+
+#### Output
+
+```
+Line 1, Column 7:
+    Print(;
+          ^
+<PARSER ERROR> -- Unexpected token ';'
 ```
 
 #### Behaviour
 
-* The parser encounters an unexpected token
-* Parsing stops and an error is reported
+- The parser encounters an unexpected token or end of input
+- Parsing stops and an error is reported with line, column, and visual indicator
 
 
 ### 3. Type Errors
 
 **Where:** Type Checker (`TypeChecker.hs`)
 
-These occur when expressions violate type rules.
+These occur when expressions violate the type rules of the language.
 
-#### Examples
+#### Causes
+
+- Type mismatch in a declaration (e.g. assigning a `String` to an `int` variable)
+- Using an undefined variable
+- Applying an operator to incompatible types
+
+#### Example
 
 ```
-Input:  x + 5
+Input:  int x = "hello";
 ```
 
-(where `x` is undefined or not an integer)
+#### Output
+
+```
+<TYPE ERROR> -- Type error: declaration expects `Int`, but got String "hello".
+```
 
 #### Behaviour
 
-* The type checker detects the mismatch
-* Evaluation is not performed
-* An error message is returned
+- The type checker detects the mismatch
+- An error message is returned with details of the expected and actual types
+- Evaluation is not performed
 
 
 ### 4. Runtime Errors
 
 **Where:** Evaluator (`Eval.hs`, `Eval/Errors.hs`)
 
-These occur during execution when an operation cannot be completed.
+These occur during execution when an operation cannot be completed even though it passed type checking.
 
-#### Examples
+#### Causes
+
+- Division by zero
+- Modulo by zero
+- Accessing an undefined variable at runtime
+- List index out of bounds
+- Invalid function arguments (e.g. `sqrt(-1)`)
+
+#### Example
 
 ```
 Input:  10 / 0
 ```
 
+#### Output
+
+```
+<RUNTIME ERROR> -- Division by zero
+```
+
 #### Behaviour
 
-* Evaluation fails
-* An error is returned instead of a result
+- Evaluation halts immediately
+- An error is returned describing the cause
+- No partial result is produced
 
-## Error Reporting
-
-Errors are reported with clear messages indicating the issue and where it occurred.
-
-Typical format:
-
-```
-Error: Unexpected token '='
-Error: Type mismatch in expression
-Error: Division by zero
-```
-
-The system stops further processing once an error is detected to avoid cascading failures.
+---
 
 ## Error Handling Strategy
 
-The project follows a staged approach:
+The project follows a staged approach, catching errors as early as possible:
 
-1. **Lexer** – rejects invalid characters early
-2. **Parser** – ensures structure is correct
-3. **Type Checker** – validates correctness of expressions
-4. **Evaluator** – executes only valid programs
+1. **Lexer** — rejects invalid or unrecognised characters immediately, before any parsing begins
+2. **Parser** — ensures the token sequence conforms to the language grammar
+3. **Type Checker** — validates type correctness of all expressions and declarations
+4. **Evaluator** — executes only programs that have passed all prior stages
 
-This ensures:
+This pipeline ensures:
 
-* Errors are caught as early as possible
-* Invalid programs do not proceed to later stages
-* The system remains stable and predictable
+- Errors are caught at the earliest possible stage
+- Invalid programs do not proceed to later stages
+- The programmer receives precise, actionable feedback including the exact source location
 
-## Examples
+---
 
-### Example 1: Syntax Error
+## Full Examples
+
+### Example 1: Lexical Error (unrecognised character)
 
 ```
-Input:  let x =
+Input:  let x = 5 @;
 ```
 
 Output:
 
 ```
-Error: Unexpected end of input
+Line 1, Column 11:
+    let x = 5 @;
+              ^
+<LEXER ERROR> -- Unexpected character '@'.
 ```
 
-### Example 2: Type Error
+### Example 2: Lexical Error (non-ASCII character)
+
+```
+Input:  let x = 5£;
+```
+
+Output:
+
+```
+Line 1, Column 11:
+    let x = 5£;
+              ^
+<LEXER ERROR> -- Unexpected non-ASCII character "£". Please use supported ASCII syntax only.
+```
+
+### Example 3: Lexical Error (unclosed block comment)
+
+```
+Input:  /* this comment was never closed
+```
+
+Output:
+
+```
+<LEXER ERROR> -- Unclosed block comments detected, did you close it using '*/'?
+```
+
+### Example 4: Syntax Error
+
+```
+Input:  Print(;
+```
+
+Output:
+
+```
+Line 1, Column 7:
+    Print(;
+          ^
+<PARSER ERROR> -- Unexpected token ';'
+```
+
+### Example 5: Type Error
+
+```
+Input:  int x = "hello";
+```
+
+Output:
+
+```
+<TYPE ERROR> -- Type error: declaration expects `Int`, but got String "hello".
+```
+
+### Example 6: Runtime Error (division by zero)
+
+```
+Input:  10 / 0
+```
+
+Output:
+
+```
+<RUNTIME ERROR> -- Division by zero
+```
+
+### Example 7: Runtime Error (undefined variable)
 
 ```
 Input:  x + 5
@@ -135,21 +281,23 @@ Input:  x + 5
 Output:
 
 ```
-Error: Undefined variable or type mismatch
+<RUNTIME ERROR> -- Undefined identifier: x
 ```
 
-### Example 3: Runtime Error
+### Example 8: Runtime Error (list index out of bounds)
 
 ```
-Input:  10 / 0
+Input:  [1, 2, 3][10]
 ```
 
 Output:
 
 ```
-Error: Division by zero
+<RUNTIME ERROR> -- List index out of bounds
 ```
+
+---
 
 ## Summary
 
-Error handling is implemented across all stages of the pipeline to ensure robustness. By separating error detection into lexical, syntactic, semantic, and runtime stages, the system provides clear feedback and prevents invalid programs from executing.
+Error handling is implemented across all four stages of the pipeline. Every error includes a clear message describing the cause. Lexical and syntax errors additionally include the line and column number of the fault along with a visual source pointer (`^`) that highlights exactly where in the code the issue occurred. This staged approach ensures robustness, clarity of feedback, and prevents invalid programs from executing.
