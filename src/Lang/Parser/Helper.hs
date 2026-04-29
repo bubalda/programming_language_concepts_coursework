@@ -12,8 +12,8 @@ parserIgnore _ = False
 -- Parse Error
 renderError :: String -> Int -> Int -> String -> String
 renderError src line col msg =
-  "\n[!] " ++ formatPos (line + 1) col ++ msg ++ "\n" ++
-  "    | Line " ++ show (line + 1) ++ ", Column " ++ show col ++ "\n" ++
+  "\n[!] " ++ formatPos line col ++ msg ++ "\n" ++
+  "    | Line " ++ show line ++ ", Column " ++ show col ++ "\n" ++
   "    |\n" ++
   "    | " ++ srcLine ++ "\n" ++
   "    | " ++ replicate (max 0 (col - 1)) ' ' ++ "^^^^^^\n"
