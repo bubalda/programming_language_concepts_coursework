@@ -265,8 +265,8 @@ int last = myList[-1];
 Lists can also be sliced:
 
 ```
-myList[1:3]
-myList[::2]
+myList[1:3];
+myList[::2];
 ```
 
 ---
@@ -374,11 +374,11 @@ double z = 3.14 * 2.0;
 ### If / Else
 
 ```
-int score = 85;
-if (score >= 50) {
-    String result = "Pass";
-} else {
-    String result = "Fail";
+int score = 85; \
+if (score >= 50) { \
+    String result = "Pass"; \
+} else { \
+    String result = "Fail"; \
 }
 ```
 
