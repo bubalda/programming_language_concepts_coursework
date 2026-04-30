@@ -144,7 +144,7 @@ Once inside the REPL, type `:?` or `:help` to display all available commands.
 | `:evalPretty [ON\|OFF]` | Pretty-print evaluation results |
 | `:env` | Display all currently saved variables |
 | `:history` | Show command history |
-| `:reset` | Clear all saved variables and history |
+| `:reset` | Clear all saved variables and recorded history |
 
 Use a trailing `\` to continue a statement onto the next line. Each statement must end with `;`
 
