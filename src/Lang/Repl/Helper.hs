@@ -6,6 +6,7 @@ module Lang.Repl.Helper
     isBlankLine,
     wrapSection,
     uppercase,
+    lowerFirst,
     putStrLnRepl,
     putInfoRepl,
     putSuccessRepl,
@@ -20,7 +21,7 @@ module Lang.Repl.Helper
 where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Char (toUpper)
+import Data.Char (toUpper, toLower)
 import System.Console.Haskeline (InputT)
 import System.Exit (exitSuccess)
 
@@ -101,3 +102,7 @@ cyanCode = "36;1"
 -- Allows VSCode shortcut to code position.
 formatPos :: Int -> Int -> String
 formatPos l c = show l ++ ":" ++ show c ++ ": "
+
+lowerFirst :: String -> String
+lowerFirst [] = []
+lowerFirst (x:xs) = toLower x : xs

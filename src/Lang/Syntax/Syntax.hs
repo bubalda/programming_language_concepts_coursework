@@ -28,102 +28,107 @@ import qualified Data.Map as Map
 --
 data Type 
     = TBool       -- ^ Boolean type (@True@, @False@)
-    | TInt        -- ^ 32-bit signed integer
+    | TInt        -- ^ Machine-sized signed integer
     | TFloat      -- ^ Single-precision floating point
     | TDouble     -- ^ Double-precision floating point
     | TChar       -- ^ Unicode character
-    | TString     -- ^ UTF-8 string
+    | TString     -- ^ Sequence of characters
     | TList Type  -- ^ Homogeneous list of elements
     | TNull       -- ^ Null type
-    | TDynamic    -- ^ Dynamic type
+    | TDynamic    -- ^ Dynamically typed value
     deriving (Show, Eq, Read)
 
 -- | Expression represents all computable values
 -- This includes variables, literals, operations, function calls and list operations
 data Expr
     -- | Variables and Literals
-    = Var String -- ^ x
-    | Let String Expr Expr -- ^ let x = 4 in x * x, in scope
-    | IntLit Int -- ^ 16
-    | BoolLit Bool -- ^ false
-    | CharLit Char -- ^ 'c'
-    | FloatLit Float -- ^ Type casted
-    | DoubleLit Double -- ^ Dynamic reading defaults all numbers with decimal points to double 1.32
-    | StringLit String -- ^ "Hello World"
-    | ListLit [Expr] -- ^ [a]
-    | NullLit -- ^ null
+    = Var String            -- ^ x
+    | Let String Expr Expr  -- ^ let x = 4 in x * x, in scope
+    | IntLit Int            -- ^ 16
+    | BoolLit Bool          -- ^ false
+    | CharLit Char          -- ^ 'c'
+    | FloatLit Float        -- ^ Type casted
+    | DoubleLit Double      -- ^ Dynamic reading defaults all numbers with decimal points to double 1.32
+    | StringLit String      -- ^ "Hello World"
+    | ListLit [Expr]        -- ^ [a]
+    | NullLit               -- ^ null
 
     -- | Binary Operations
     | BinOp TwoExprOperator Expr Expr -- ^ a () b operators, where a and b are variables
 
     -- | Unary Operations
     | Negate Expr -- ^ -x
-    | Not Expr -- ^ !true
+    | Not Expr    -- ^ !true
 
     -- | Function
     | Call Expr [Expr] -- ^ Call "function_name" [params]
 
     -- | List Operations
-    | ListIndex Expr Expr -- ^ list[i]
-    | ListSlice Expr Slice -- ^ list[start:stop:step]
-    | ListRange Expr Expr -- ^ [1..100]
+    | ListIndex Expr Expr   -- ^ list[i]
+    | ListSlice Expr Slice  -- ^ list[start:stop:step]
+    | ListRange Expr Expr   -- ^ [1..100]
     deriving (Show, Eq)
 
 -- | This represents binary operators between two expressions
 -- They are grouped by category: Arithmetic, bitwise, comparison and logical operators
 data TwoExprOperator
     -- | Arithmetic Operators
-    = Add    
-    | Sub
-    | Mul
-    | Div
-    | Mod
+    = Add       -- ^ Addition (2 + 5)
+    | Sub       -- ^ Subtraction (10 - 3)     
+    | Mul       -- ^ Multiplication ( 2 * 4)
+    | Div       -- ^ Division ( 5 / 5)
+    | Mod       -- ^ Modulo (10 % 2)
 
     -- | Bitwise Operators
-    | BitAnd
-    | BitOr
-    | BitXor
-    | BitLShift
-    | BitRShift
+    | BitAnd    -- ^ Bitwise AND (5 & 3)
+    | BitOr     -- ^ Bitwise OR (10 | 7)
+    | BitXor    -- ^ Bitwise XOR (10 ^ 8)
+    | BitLShift -- ^ Left shift (1 << 3)
+    | BitRShift -- ^ Right shift (8 >> 3)
 
     -- | Comparison Operators
-    | Eq
-    | Neq
-    | Lte
-    | Lt
-    | Gte
-    | Gt
+    | Eq        -- ^ Equality (True == True)
+    | Neq       -- ^ Inequality (5 != 1)
+    | Lte       -- ^ Less than or equal ( 5 <= 10)
+    | Lt        -- ^ Less than (1 < 2)
+    | Gte       -- ^ Greater than or equal (2 >= 2)
+    | Gt        -- ^ Greater than (5 > 3)
 
     -- | Logical Operators
-    | And
-    | Or
+    | And       -- ^ Logical AND (True && True)
+    | Or        -- ^ Logical OR (True || False)
     deriving (Show, Eq)
 
 
 -- | Assignment operators are used to combine an operation with assignment
 data AssignOperator 
-    = AddEq 
-    | SubEq
-    | MulEq
-    | DivEq
-    | ModEq
-    | BitAndEq
-    | BitOrEq
-    | BitXorEq
-    | BitLShiftEq
-    | BitRShiftEq
+    = AddEq         -- ^ Addition assignment (+=)
+    | SubEq         -- ^ Subtraction assignment (-=)
+    | MulEq         -- ^ Multiplication assignment (*=)
+    | DivEq         -- ^ Division assignment (/=)
+    | ModEq         -- ^ Modulo assignment (%=)
+    | BitAndEq      -- ^ Bitwise AND assignment (&=)
+    | BitOrEq       -- ^ Bitwise OR assignment (|=)
+    | BitXorEq      -- ^ Bitwise XOR assignment (^=)
+    | BitLShiftEq   -- ^ Left shift assignment (<<=) 
+    | BitRShiftEq   -- ^ Right shift assignment (>>=)
     deriving(Show, Eq)
 
+
+-- | List slicing 
+-- [start:stop:step] (each component is optional)
 data Slice = Slice (Maybe Expr) (Maybe Expr) (Maybe Expr)
   deriving (Show, Eq)
 
+-- | Statements are used to perform actions and modify program state
+-- Statements do not always produce values unlike expressions
 data Stmt
-    = Assign String Expr -- ^ x = 10
-    | ExprStmt Expr -- ^ x
-    | AssignOp AssignOperator String Expr -- ^ x += 10
-    | Block [Stmt] -- ^ { x += 1; x += 2; }
-    | If Expr Stmt (Maybe Stmt) -- ^ if (cond) then r = 2; else r = 3
-    | Decl Type String Expr -- ^ double x = 10
+    = Assign String Expr                    -- ^ x = 10
+    | ExprStmt Expr                         -- ^ x
+    | AssignOp AssignOperator String Expr   -- ^ x += 10
+    | Block [Stmt]                          -- ^ { x += 1; x += 2; }
+    | If Expr Stmt (Maybe Stmt)             -- ^ if (cond) then r = 2; else r = 3
+    | Decl Type String Expr                 -- ^ double x = 10
     deriving (Show, Eq)
 
 -- | Built-in mathematical functions across 7 categories

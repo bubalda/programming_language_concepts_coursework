@@ -8,20 +8,6 @@ import Control.Monad (forM_, unless, foldM)
 
 -- Static analysis tool. Walks through AST before the program runs
 -- TypeChecker infers the result without actually computing (compile-time)
-
--- TypeChecker needs to remember what variable exists and what their types are
--- At runtime, the evaluator has:
--- type ProgramEnv = Map.Map String Value
-
--- At compile-time, the type checker has:
--- type TypeEnv = Map.Map String Type
-
--- Type Inference Rules
--- For every Expr constructor, there's a rule for what type it produces
-
--- Statements unlike expressions which produce types, it modifies the environment
-
-
 checkExpr :: TypeEnv -> Expr -> Either TypeError Type
 checkExpr env expr =
     case expr of 
@@ -254,9 +240,9 @@ integerBinOp :: TypeEnv -> Expr -> Expr -> Either TypeError Type
 integerBinOp env e1 e2 = do
     t1 <- checkExpr env e1
     t2 <- checkExpr env e2
-    if not (isCompatibleType t1 TInt)
+    if not (t1 == TInt || t1 == TDynamic)
         then Left (ExpectedTypeInt t1 e1)
-    else if not (isCompatibleType t2 TInt)
+    else if not (t2 == TInt || t2 == TDynamic)
         then Left (ExpectedTypeInt t2 e2)
     else
         Right TInt
@@ -352,12 +338,12 @@ checkStmt env stmt =
                         else Left (ExpectedNumeric exprType expr)
 
                 requireInt =
-                    if varType == TInt && exprType == TInt
+                    if (varType == TInt || varType == TDynamic) && exprType == TInt
                         then Right ()
-                        else if varType /= TInt
-                            then Left (ExpectedTypeInt varType (Var name))
+                        else if exprType /= TInt
+                            then Left (ExpectedTypeInt exprType expr)
                         else 
-                            Left (ExpectedTypeInt exprType expr)
+                            Left (ExpectedTypeInt varType (Var name))
 
             case op of
                 AddEq -> requireNumeric

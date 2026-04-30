@@ -19,9 +19,11 @@ import Lang.Repl.Env
     resetReplState,
     saveReplState,
   )
-import Lang.Repl.Helper (putErrorRepl, putInfoRepl, putSuccessRepl, uppercase)
+import Lang.Repl.Helper (putErrorRepl, putInfoRepl, putSuccessRepl, uppercase, lowerFirst)
 import System.Console.Haskeline (InputT)
 import System.Exit (exitSuccess)
+import Lang.Syntax.Syntax
+import Lang.TypeChecker.Types
 
 -- Repl commands (like ghci)
 -- Debug mode also switches :tokens and :ast to true.
@@ -94,7 +96,12 @@ displayEnv rEnv
       putInfoRepl "Saved variables:"
       mapM_ (putInfoRepl . renderEnvEntry) (Map.toList (programEnv rEnv))
   where
-    renderEnvEntry (name, value) = "  " ++ name ++ " = " ++ renderEval value
+    renderEnvEntry (name, value) = 
+      let typeStr = case Map.lookup name (typeEnv rEnv) of
+                Just TDynamic -> "dynamic "   
+                Just t        -> lowerFirst (prettyPrintType t) ++ " " 
+                Nothing       -> ""           
+         in "  " ++ typeStr ++ name ++ " = " ++ renderEval value
 
 displayHistory :: ReplEnv -> InputT IO ()
 displayHistory rEnv
