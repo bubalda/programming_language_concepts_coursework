@@ -23,7 +23,7 @@ The project also includes a REPL for interactive execution and a test suite to v
 - List literals, ranges, indexing, and slicing
 - Built-in mathematical and statistical functions (`sin`, `cos`, `sqrt`, `mean`, `fact`, etc.)
 - Type checking before evaluation
-- Interactive REPL with command history and persistent state
+- Interactive REPL with command history and session-local environment state
 - Debug mode for inspecting the internal pipeline
 - Error reporting with line/column numbers and visual source pointers
 
@@ -55,7 +55,7 @@ Input → Lexer → Tokens → Parser → AST → Type Checker → Evaluator →
   Executes the program and produces results.
 
 - **REPL** (`Repl.hs`, `Runner.hs`, `Commands.hs`)
-  Allows interactive input and execution with persistent state.
+  Allows interactive input and execution with session-local state.
 
 - **CLI** (`Main.hs`, `CLI/Args.hs`)
   Handles program entry and command-line arguments.
@@ -137,7 +137,7 @@ Once inside the REPL, type `:?` or `:help` to display all available commands.
 | Command | Description |
 |---------|-------------|
 | `:?` / `:help` | Show the help page |
-| `:q` / `:quit` | Save state and exit |
+| `:q` / `:quit` | Exit the current REPL session |
 | `:debug [ON\|OFF]` | Toggle debug mode (shows tokens, AST, and evaluation) |
 | `:tokens [ON\|OFF]` | Show lexer token output |
 | `:ast [ON\|OFF]` | Show parser AST output |
@@ -148,7 +148,7 @@ Once inside the REPL, type `:?` or `:help` to display all available commands.
 
 Use a trailing `\` to continue a statement onto the next line. Each statement must end with `;`
 
-## Usage
+The REPL keeps history only for the current session. It reads the baseline environment from `.c2repl-env` at startup, writes the current session state to `.c2repl-env-temp` while running, and deletes the temp file when the session exits.
 
 When running the program, enter expressions or statements directly through the REPL.
 
@@ -220,4 +220,4 @@ All tests pass successfully with no failures.
 - The project is designed with a modular structure, separating each stage of the pipeline
 - Type checking is performed before evaluation to prevent invalid programs from executing
 - Debug mode (`--debug` or `-d`) is useful for inspecting the internal pipeline at each stage
-- The REPL saves state between inputs — use `:env` to view saved variables and `:reset` to clear them
+- The REPL keeps state during the current session only. Use `:env` to view saved variables and `:reset` to clear them
