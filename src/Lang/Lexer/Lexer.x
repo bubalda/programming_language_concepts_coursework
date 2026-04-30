@@ -210,11 +210,11 @@ runLexer input = case runAlex input scanTokens of
 formatUnexpectedToken :: String -> String
 formatUnexpectedToken s
   | any (not . isAscii) s =
-      "<LEXER ERROR> -- Unexpected non-ASCII character "
+      "Unexpected non-ASCII character "
         ++ show s
         ++ ". Please use supported ASCII syntax only."
   | otherwise =
-      "<LEXER ERROR> -- Unexpected character "
+      "Unexpected character "
         ++ show s
         ++ "."
 
