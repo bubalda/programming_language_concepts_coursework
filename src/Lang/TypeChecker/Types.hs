@@ -36,7 +36,7 @@ prettyPrintType t =
 prettyPrintExpr :: Expr -> String 
 prettyPrintExpr (Var s) = s
 prettyPrintExpr (IntLit n) = show n
-prettyPrintExpr (BoolLit b) = if b then "True" else "False"
+prettyPrintExpr (BoolLit b) = if b then "true" else "false"
 prettyPrintExpr (FloatLit f) = show f       
 prettyPrintExpr (DoubleLit d) = show d
 
