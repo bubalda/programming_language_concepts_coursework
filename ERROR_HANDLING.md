@@ -128,7 +128,7 @@ Input:  int x = "hello";
 #### Output
 
 ```
-<TYPE ERROR> -- Type error: declaration expects `Int`, but got String "hello".
+<TYPE ERROR> -- Type error: Expected type Int, but got string "hello"
 ```
 
 #### Behaviour

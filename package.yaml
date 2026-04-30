@@ -75,3 +75,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - c2-compiler
+    - hspec

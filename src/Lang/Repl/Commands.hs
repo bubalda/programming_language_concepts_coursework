@@ -43,7 +43,7 @@ handleCommand rEnv line = do
     [":evalPretty", val] -> setFlag (\f b -> f {prettyEval = b}) "Prettify Evaluator Result" val rEnv'
     [":env"] -> displayEnv rEnv' >> return rEnv'
     [":history"] -> displayHistory rEnv' >> return rEnv'
-    [":reset"] -> putSuccessRepl "Cleared saved variables and history." >> return (resetReplState rEnv')
+    [":reset"] -> putSuccessRepl "Cleared saved variables and recorded history." >> return (resetReplState rEnv')
     _ -> putErrorRepl "Unknown command. Check :? for help." >> return rEnv'
 
 commandPrefix :: String
@@ -75,14 +75,14 @@ displayHelp = do
   mapM_
     putInfoRepl
     [ "  :? / :help                Show this help page",
-      "  :q / :quit                Save state and exit",
+      "  :q / :quit                Exit the current REPL session",
       "  :debug [on|off]           Toggle debug mode",
       "  :tokens [on|off]          Show lexer output",
       "  :ast [on|off]             Show parser output",
       "  :evalPretty [on|off]      Pretty print evaluation results",
       "  :env                      Show saved variables",
       "  :history                  Show command history",
-      "  :reset                    Clear saved variables and history",
+      "  :reset                    Clear saved variables and recorded history",
       "  Use a trailing \\ to continue onto the next line, and end each statement with ;"
     ]
   putInfoRepl ""
@@ -107,7 +107,7 @@ displayHistory rEnv
 
 quitRepl :: ReplEnv -> InputT IO ReplEnv
 quitRepl rEnv = do
-  putSuccessRepl "Session saved. Goodbye!"
+  putSuccessRepl "Session closed. Goodbye!"
   liftIO (saveReplState rEnv)
   liftIO deleteTempState
   liftIO exitSuccess
