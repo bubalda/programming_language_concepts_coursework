@@ -22,7 +22,7 @@ When an error occurs, the system reports:
 Line 3, Column 7:
     Print(;
           ^
-Error: <PARSER ERROR> -- Unexpected token ';'
+Error: Unexpected token ';'
 ```
 
 The `^` character points directly to the position of the fault in the source line. For longer invalid spans, multiple carets are used:
@@ -31,7 +31,7 @@ The `^` character points directly to the position of the fault in the source lin
 Line 1, Column 9:
     let x = @value;
             ^^^^^^
-Error: <LEXER ERROR> -- Unexpected character '@'.
+Error: Unexpected character '@'.
 ```
 
 This format makes it immediately clear where the error occurred, significantly reducing debugging time.
@@ -64,7 +64,7 @@ Input:  let x = 5 @;
 Line 1, Column 11:
     let x = 5 @;
               ^
-Error: <LEXER ERROR> -- Unexpected character '@'.
+Error: Unexpected character '@'.
 ```
 
 #### Behaviour
@@ -98,7 +98,7 @@ Input:  Print(;
 Line 1, Column 7:
     Print(;
           ^
-Error: <PARSER ERROR> -- Unexpected token ';'
+Error: Unexpected token ';'
 ```
 
 #### Behaviour
@@ -128,7 +128,7 @@ Input:  int x = "hello";
 #### Output
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got string "hello"
+Error: Type error: Expected type Int, but got string "hello"
 ```
 
 #### Behaviour
@@ -203,7 +203,7 @@ Output:
 Line 1, Column 11:
     let x = 5 @;
               ^
-Error: <LEXER ERROR> -- Unexpected character '@'.
+Error: Unexpected character '@'.
 ```
 
 ### Example 2: Lexical Error (non-ASCII character)
@@ -218,7 +218,7 @@ Output:
 Line 1, Column 11:
     let x = 5£;
               ^
-Error: <LEXER ERROR> -- Unexpected non-ASCII character "£". Please use supported ASCII syntax only.
+Error: Unexpected non-ASCII character "£". Please use supported ASCII syntax only.
 ```
 
 ### Example 3: Lexical Error (unclosed block comment)
@@ -230,7 +230,7 @@ Input:  /* this comment was never closed
 Output:
 
 ```
-Error: <LEXER ERROR> -- Unclosed block comments detected, did you close it using '*/'?
+Error: Unclosed block comments detected, did you close it using '*/'?
 ```
 
 ### Example 4: Syntax Error
@@ -245,7 +245,7 @@ Output:
 Line 1, Column 7:
     Print(;
           ^
-Error: <PARSER ERROR> -- Unexpected token ';'
+Error: Unexpected token ';'
 ```
 
 ### Example 5: Type Error
@@ -257,7 +257,7 @@ Input:  int x = "hello";
 Output:
 
 ```
-<TYPE ERROR> -- Type error: declaration expects `Int`, but got String "hello".
+Error: Type error: declaration expects `Int`, but got String "hello".
 ```
 
 ### Example 6: Runtime Error (division by zero)

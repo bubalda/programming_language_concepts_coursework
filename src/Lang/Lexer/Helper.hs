@@ -9,7 +9,7 @@ printTokens tokens = wrapSection "Tokens" (mapM_ printToken tokens)
   where
     printToken :: Token -> IO ()
     printToken (Token TokEOF _) = return () -- Hide TokEOF
-    printToken (Token (TokError s) p) = putStrLn $ formatTokenPos p ++ "<LEXER ERROR> -- Could not tokenize string " ++ show s
+    printToken (Token (TokError s) p) = putStrLn $ formatTokenPos p ++ "Could not tokenize string " ++ show s
     printToken t = putStrLn $ formatToken t
 
     formatToken :: Token -> String
