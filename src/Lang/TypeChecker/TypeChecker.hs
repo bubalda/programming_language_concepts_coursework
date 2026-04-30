@@ -344,7 +344,7 @@ checkStmt env stmt =
 
             varType <- case Map.lookup name env of
                 Just t  -> Right t
-                Nothing -> Right TDynamic
+                Nothing -> Left (UndefinedVariable name)
 
             let requireNumeric = 
                     if isNumeric varType && isNumeric exprType
