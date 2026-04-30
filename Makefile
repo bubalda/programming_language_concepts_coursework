@@ -1,7 +1,7 @@
 .PHONY: all build run repl debug test clean rebuild install help
 
 # Default target
-all: build test run
+all: build test
 
 # Build the project
 build:
