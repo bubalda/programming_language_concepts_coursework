@@ -17,7 +17,7 @@ The language supports the following static data types, which are declared explic
 | Integer | `int` | Whole numbers | `int x = 5;` |
 | Double-precision float | `double` | Double-precision decimal | `double y = 3.14;` |
 | Single-precision float | `float` | Single-precision decimal | `float z = 1.5;` |
-| Boolean | `bool` | `True` or `False` | `bool flag = True;` |
+| Boolean | `bool` | `True` or `False` | `bool b = True;` |
 | Character | `char` | Single ASCII character | `char c = 'a';` |
 | String | `String` | Sequence of characters | `String s = "hello";` |
 
@@ -218,15 +218,15 @@ let x = 5 in x + 1
 
 The variable `x` only exists within the `in` body and is not added to the surrounding environment.
 
-### If / Else Conditions
+### If-Then-Else Conditions
 
-Conditional logic uses `if` and `else` with braces `{}`:
+Conditional logic uses `if`, `then` and `else` with braces `{}`:
 
 ```
-if (x > 0) {
-    String result = "Positive";
-} else {
-    String result = "Non-positive";
+if (x > 0) then { \
+    String result = "Positive"; \
+} else { \
+    String result = "Non-positive"; \
 }
 ```
 
@@ -281,8 +281,8 @@ The syntax is defined using Happy. The grammar describes how tokens combine into
 Stmt → TYPE IDENTIFIER = Expr ;
      | IDENTIFIER = Expr ;
      | IDENTIFIER AssignOp Expr ;
-     | if ( Expr ) { Stmts } else { Stmts }
-     | if ( Expr ) { Stmts }
+     | if ( Expr ) then { Stmts } else { Stmts }
+     | if ( Expr ) then { Stmts }
 
 Expr → Expr BinOp Expr
      | ! Expr
@@ -371,11 +371,11 @@ int y = x + 5;
 double z = 3.14 * 2.0;
 ```
 
-### If / Else
+### If-Then-Else
 
 ```
 int score = 85; \
-if (score >= 50) { \
+if (score >= 50) then { \
     String result = "Pass"; \
 } else { \
     String result = "Fail"; \
