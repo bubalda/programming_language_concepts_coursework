@@ -1,52 +1,79 @@
+-- |
+-- This module defines the syntax tree that is utilized by the parser, type checker and evaluator
+-- It represents all the syntactic constructs in our C2 language
+--
+-- The design contains & emphasizes on:
+
+-- * Primitive and compound types
+-- * Expressions (Expr)
+-- * Statements (Stmt)
+-- * Operators
+-- * Function metadata
+-- * Utility mappings for built-in functions
+
+-- * Type Safety: Built-in functions that are represented as a sum type, allowing compile-time exhaustiveness checking
+-- * Extensibility: New functions, types and operators can be added without the need to modify existing code logic
+-- * Gradual Typing: Both statically-typed declarations and dynamic variables are supported
+--
 module Lang.Syntax.Syntax where
 import Data.Char ( toLower ) 
 import qualified Data.Map as Map
 
+-- | Represents all the supported language-level 
+-- These types are used by the type checker to validate expressions and declarations
+
+-- The type system allows:
+-- * Numeric types with automatic promotion
+-- * Parametric lists via 'TList'
+--
 data Type 
-    = TBool
-    | TInt
-    | TFloat
-    | TDouble
-    | TChar
-    | TString
-    | TList Type
-    | TNull
-    | TDynamic
+    = TBool       -- ^ Boolean type (@True@, @False@)
+    | TInt        -- ^ 32-bit signed integer
+    | TFloat      -- ^ Single-precision floating point
+    | TDouble     -- ^ Double-precision floating point
+    | TChar       -- ^ Unicode character
+    | TString     -- ^ UTF-8 string
+    | TList Type  -- ^ Homogeneous list of elements
+    | TNull       -- ^ Null type
+    | TDynamic    -- ^ Dynamic type
     deriving (Show, Eq, Read)
 
+-- | Expression represents all computable values
+-- This includes variables, literals, operations, function calls and list operations
 data Expr
     -- | Variables and Literals
-    = Var String -- | x
-    | Let String Expr Expr -- | let x = 4 in x * x, in scope
-    | IntLit Int -- | 16
-    | BoolLit Bool -- | false
-    | CharLit Char -- | 'c'
-    | FloatLit Float -- | Type casted
-    | DoubleLit Double -- | Dynamic reading defaults all numbers with decimal points to double 1.32
-    | StringLit String -- | "Hello World"
-    | ListLit [Expr] -- | [a]
-    | NullLit -- | null
+    = Var String -- ^ x
+    | Let String Expr Expr -- ^ let x = 4 in x * x, in scope
+    | IntLit Int -- ^ 16
+    | BoolLit Bool -- ^ false
+    | CharLit Char -- ^ 'c'
+    | FloatLit Float -- ^ Type casted
+    | DoubleLit Double -- ^ Dynamic reading defaults all numbers with decimal points to double 1.32
+    | StringLit String -- ^ "Hello World"
+    | ListLit [Expr] -- ^ [a]
+    | NullLit -- ^ null
 
     -- | Binary Operations
-    | BinOp TwoExprOperator Expr Expr -- | a () b operators, where a and b are variables
+    | BinOp TwoExprOperator Expr Expr -- ^ a () b operators, where a and b are variables
 
     -- | Unary Operations
-    | Negate Expr -- | -x
-    | Not Expr -- | !true
+    | Negate Expr -- ^ -x
+    | Not Expr -- ^ !true
 
     -- | Function
-    | Call Expr [Expr] -- | Call "function_name" [params]
+    | Call Expr [Expr] -- ^ Call "function_name" [params]
 
     -- | List Operations
-    | ListIndex Expr Expr -- | list[i]
-    | ListSlice Expr Slice -- | list[start:stop:step]
-    | ListRange Expr Expr -- | [1..100]
+    | ListIndex Expr Expr -- ^ list[i]
+    | ListSlice Expr Slice -- ^ list[start:stop:step]
+    | ListRange Expr Expr -- ^ [1..100]
     deriving (Show, Eq)
 
-
+-- | This represents binary operators between two expressions
+-- They are grouped by category: Arithmetic, bitwise, comparison and logical operators
 data TwoExprOperator
     -- | Arithmetic Operators
-    = Add
+    = Add    
     | Sub
     | Mul
     | Div
@@ -73,7 +100,7 @@ data TwoExprOperator
     deriving (Show, Eq)
 
 
--- | Assignment Operators
+-- | Assignment operators are used to combine an operation with assignment
 data AssignOperator 
     = AddEq 
     | SubEq
@@ -91,36 +118,41 @@ data Slice = Slice (Maybe Expr) (Maybe Expr) (Maybe Expr)
   deriving (Show, Eq)
 
 data Stmt
-    = Assign String Expr -- x = 10
-    | ExprStmt Expr -- x
-    | AssignOp AssignOperator String Expr -- x += 10
-    | Block [Stmt] -- { x += 1; x += 2; }
-    | If Expr Stmt (Maybe Stmt) -- if (cond) then r = 2; else r = 3
-    | Decl Type String Expr -- double x = 10
+    = Assign String Expr -- ^ x = 10
+    | ExprStmt Expr -- ^ x
+    | AssignOp AssignOperator String Expr -- ^ x += 10
+    | Block [Stmt] -- ^ { x += 1; x += 2; }
+    | If Expr Stmt (Maybe Stmt) -- ^ if (cond) then r = 2; else r = 3
+    | Decl Type String Expr -- ^ double x = 10
     deriving (Show, Eq)
 
--- | Type safe functions
+-- | Built-in mathematical functions across 7 categories
+-- Used for:
+-- * Type checking
+-- * Arity checking
+-- * Return type inference
+-- * Function dispatch
 data Function 
-    -- | Core Functions
+    -- | Category 1: Core Mathematic Functions
     = FAbs | FCeil | FFloor | FRound | FSign 
 
-    -- | Power/Root
+    -- | Category 2: Power and Roots
     | FSqrt | FCbrt | FPow | FExp | FSquare | FCube | FExp10
 
-    -- | Trigonometry
+    -- | Category 3: Trigonometry
     | FSin | FCos | FTan | FAsin | FAcos | FAtan | FAtan2 
     | FSec | FCsc | FCot | FVersin | FExsec 
 
-    -- | Log
+    -- | Category 4: Logarithmics
     | FLn | FLog10 | FLog2 | FLog | FLog1p
 
-    -- | Combinatorics
+    -- | Category 5: Combinatorics
     | FFact | FFact2 | FComb | FPerm | FFib | FGamma | FGcd | FLcm 
 
-    -- | Stats 
+    -- | Category 6: Statistical
     | FMean | FMedian | FMode | FSum | FProduct | FMin | FMax | FStddev
 
-    -- | Advanced Maths
+    -- | Category 7: Hyperbolic and Advanced Mathematical Functions
     | FSinh | FCosh | FTanh | FAcosh | FAtanh | FCsch | FCoth | FAsinh | FSech
 
 
@@ -128,7 +160,10 @@ data Function
     | FLength
     deriving (Show, Eq)  
 
--- | Number of arguments that each function expects
+-- | functionArgs returns the required number of arguments for a function
+-- It is used by the type checker to validate function calls
+-- Most functions only take 1 argument
+-- Functions such as 'FPow', 'FAtan2', 'FLog', 'FComb', 'FPerm', 'FGcd', and 'FLcm' take 2 arguments.
 functionArgs :: Function -> Int
 functionArgs func =
     case func of 
@@ -195,7 +230,9 @@ functionArgs func =
 
         FLength  -> 1
 
--- | Returns the type of all the built-in functions
+-- | Returns the output type of all the built-in functions
+-- Integer based combinatorics like 'FFact' returns 'TInt'
+-- Most of the mathematical functions return 'TDouble'
 funcReturnType :: Function -> Type
 funcReturnType func =
     case func of
@@ -209,6 +246,8 @@ funcReturnType func =
         FLcm    -> TInt
         _       -> TDouble
 
+-- | Mapping between string names and internal function constructors
+-- Used by 'funcConvertString' to allow for efficient lookup
 funcMap :: Map.Map String Function
 funcMap = Map.fromList
     [   ("abs", FAbs), ("ceil", FCeil), ("floor", FFloor), ("round", FRound), ("sign", FSign), 
@@ -228,6 +267,8 @@ funcMap = Map.fromList
         ("length", FLength)
     ]
 
+-- | Converts a function name string into a built-in function.
+-- Lookup is also case insensitive
 funcConvertString :: String -> Maybe Function 
 funcConvertString s = Map.lookup (map toLower s) funcMap
 

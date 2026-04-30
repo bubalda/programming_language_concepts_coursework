@@ -134,7 +134,10 @@ instance Show TypeError where
             show expected ++ " argument(s), but got " ++ show actual
 
         UnknownFunction fname ->
-            "Type Error: Unknown function '" ++ fname ++ "'"
+            "Type Error: Unknown function '" ++ fname ++ "'\n" ++
+            "  Hint: Did you mean one of these?:\n" ++
+            "  abs, sqrt, sin, cos, tan, exp, ln, log, pow, mean, sum, length, ...\n" ++
+            "  See FUNCTIONS.md for the complete list of available functions."
 
         NotFunction expr ->
             "Type Error: Expression is not a function: " ++ prettyPrintExpr expr

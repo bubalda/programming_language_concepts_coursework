@@ -54,7 +54,7 @@ checkExpr env expr =
         
         Not e -> do
             t <- checkExpr env e
-            if t == TBool
+            if isCompatibleType t TBool
                 then Right TBool
                 else Left (ExpectedTypeBool t e)
 
@@ -112,6 +112,7 @@ checkExpr env expr =
             listType <- checkExpr env listExpr
             case listType of
                 TList elementType -> Right elementType
+                TDynamic -> Right TDynamic
                 _                 -> Left (ExpectedList listType listExpr)
         
         ListRange e1 e2 -> do 
@@ -129,6 +130,7 @@ checkExpr env expr =
 
             elementType <- case listType of
                 TList t -> Right t 
+                TDynamic -> Right TDynamic
                 _       -> Left (ExpectedList listType listExpr)
 
             -- Helper to check if each slice is an int
