@@ -296,7 +296,7 @@ getStmtType env stmt =
         If condition thenStmt elseStmt -> do
 
             conditionType <- checkExpr env condition
-            if conditionType /= TBool
+            if not (isCompatibleType conditionType TBool)
                 then Left (ExpectedTypeBool conditionType condition)
                 else return ()
 
@@ -361,7 +361,7 @@ checkStmt env stmt =
 
         If cond thenStmt elseStmt -> do
             conditionType <- checkExpr env cond 
-            if conditionType /= TBool
+            if not (isCompatibleType conditionType TBool)
                 then Left (ExpectedTypeBool conditionType cond)
                 else return ()
 
