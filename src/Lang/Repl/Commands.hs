@@ -75,7 +75,7 @@ displayHelp = do
   mapM_
     putInfoRepl
     [ "  :? / :help                Show this help page",
-      "  :q / :quit                Save state and exit",
+      "  :q / :quit                Exit the current REPL session",
       "  :debug [on|off]           Toggle debug mode",
       "  :tokens [on|off]          Show lexer output",
       "  :ast [on|off]             Show parser output",
@@ -107,7 +107,7 @@ displayHistory rEnv
 
 quitRepl :: ReplEnv -> InputT IO ReplEnv
 quitRepl rEnv = do
-  putSuccessRepl "Session saved. Goodbye!"
+  putSuccessRepl "Session closed. Goodbye!"
   liftIO (saveReplState rEnv)
   liftIO deleteTempState
   liftIO exitSuccess

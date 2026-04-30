@@ -148,7 +148,7 @@ Once inside the REPL, type `:?` or `:help` to display all available commands.
 
 Use a trailing `\` to continue a statement onto the next line. Each statement must end with `;`
 
-The REPL keeps history only for the current session. It reads the baseline environment from `.c2repl-env` at startup, writes the current session state to `.c2repl-env-temp` while running, and deletes the temp file when the session exits.
+The REPL keeps history only for the current session. It reads the baseline environment from `.c2repl-env` at startup, writes the current session state to `.c2repl-env-temp` while running, and deletes the temp file when the session exits. Both files store the REPL state as `(programEnv, typeEnv)`, for example `(fromList [("a", VInt 1)], fromList [("a", TInt)])`.
 
 When running the program, enter expressions or statements directly through the REPL.
 
