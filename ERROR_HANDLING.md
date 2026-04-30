@@ -128,7 +128,7 @@ Input:  int x = "hello";
 #### Output
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got string "hello"
+<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
 ```
 
 #### Behaviour
@@ -257,7 +257,7 @@ Input:  int x = "hello";
 Output:
 
 ```
-<TYPE ERROR> -- Type error: declaration expects `Int`, but got String "hello".
+<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
 ```
 
 ### Example 6: Runtime Error (division by zero)

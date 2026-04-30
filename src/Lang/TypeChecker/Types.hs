@@ -98,22 +98,19 @@ instance Show TypeError where
 
         TypeMismatch expected actual expr ->
             "Type Error: Expected type " ++ prettyPrintType expected ++
-            ", but got " ++ prettyPrintType actual ++
-            " in " ++ prettyPrintExpr expr
+            ", but got " ++ prettyPrintExpr expr ++ " :: " ++ prettyPrintType actual
 
         ExpectedNumeric actual expr ->
             "Type Error: Expected a numeric value, but got " ++
-            prettyPrintType actual ++
-            " in " ++ prettyPrintExpr expr
+            prettyPrintExpr expr ++ " :: " ++ prettyPrintType actual
 
         ExpectedTypeInt actual expr ->
             "Type Error: Expected an integer, but got " ++
-            prettyPrintType actual ++
-            " in " ++ prettyPrintExpr expr
+            prettyPrintExpr expr ++ " :: " ++ prettyPrintType actual
 
         ExpectedTypeBool actual expr ->
             "Type Error: Expected a boolean, but got " ++
-            prettyPrintType actual ++ " in " ++ prettyPrintExpr expr ++
+             prettyPrintExpr expr ++ " :: " ++ prettyPrintType actual ++
             if actual == TDynamic
                 then "\n  Hint: '" ++ prettyPrintExpr expr ++ 
                 "' was declared without a type. Use 'bool " ++ prettyPrintExpr expr ++ " = ...' to declare it as boolean."
@@ -123,8 +120,7 @@ instance Show TypeError where
 
         ExpectedList actual expr ->
             "Type Error: Expected a list, but got " ++
-            prettyPrintType actual ++
-            " in " ++ prettyPrintExpr expr
+            prettyPrintExpr expr ++ " :: " ++ prettyPrintType actual
 
         EmptyList _ ->
             "Type Error: Cannot infer type of empty list"

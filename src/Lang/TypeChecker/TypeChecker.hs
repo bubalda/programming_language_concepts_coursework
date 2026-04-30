@@ -320,7 +320,7 @@ checkStmt env stmt =
             actualType <- checkExpr env expr 
             case Map.lookup name env of
                 Just varType ->
-                    if isCompatibleType varType actualType
+                    if varType == actualType || varType == TDynamic
                         then Right env
                         else Left (TypeMismatch varType actualType expr)
                 Nothing -> Right (Map.insert name TDynamic env)
