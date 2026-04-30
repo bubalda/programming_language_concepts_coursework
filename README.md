@@ -18,7 +18,7 @@ The project also includes a REPL for interactive execution and a test suite to v
   - `y = "hello"` → inferred as `String`
 - Arithmetic, logical, comparison, and bitwise operators
 - Compound assignment operators (`+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`)
-- `if / else` conditional expressions
+- `if-then-else` conditional expressions
 - `let ... in` expression-scoped bindings
 - List literals, ranges, indexing, and slicing
 - Built-in mathematical and statistical functions (`sin`, `cos`, `sqrt`, `mean`, `fact`, etc.)

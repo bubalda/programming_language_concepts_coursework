@@ -91,6 +91,7 @@ import Lang.Repl.Helper (formatPos)
 
   -- Control Structures Variables
   'if'                           { Token TokIf              _ }
+  'then'                         { Token TokThen            _ }
   'else'                         { Token TokElse            _ }
   'let'                          { Token TokLet             _ }
   'in'                           { Token TokIn              _ }
@@ -129,8 +130,8 @@ Stmts
 
 Stmt
   -- if conditions
-  : 'if' Expr Stmt %prec NO_ELSE                { If $2 $3 Nothing } 
-  | 'if' Expr Stmt 'else' Stmt                  { If $2 $3 (Just $5) }
+  : 'if' Expr 'then' Stmt %prec NO_ELSE         { If $2 $4 Nothing } 
+  | 'if' Expr 'then' Stmt 'else' Stmt           { If $2 $4 (Just $6) }
   | '{' BlockStmts '}'                          { Block $2 }
 
   -- Statement should separated using a semicolon (;) 

@@ -40,7 +40,7 @@ data TokenType
   | TokSemiColon
 
   -- Control Structures Variables
-  | TokIf | TokElse | TokLCBrack | TokRCBrack
+  | TokIf | TokThen | TokElse | TokLCBrack | TokRCBrack
   | TokLet | TokIn
 
   -- Scoping               
