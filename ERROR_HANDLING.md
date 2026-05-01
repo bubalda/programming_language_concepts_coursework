@@ -20,7 +20,7 @@ When an error occurs, the system reports:
 
 ```
 Line 3, Column 7:
-    Print(;
+    sin(;
           ^
 Error: Unexpected token ';'
 ```
@@ -128,7 +128,7 @@ Input:  int x = "hello";
 #### Output
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
+Error: Type error: Expected type Int, but got "hello" :: String
 ```
 
 #### Behaviour
@@ -155,7 +155,7 @@ These occur during execution when an operation cannot be completed even though i
 #### Example
 
 ```
-Input:  10 / 0
+Input:  10 / 0;
 ```
 
 #### Output
