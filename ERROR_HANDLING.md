@@ -257,7 +257,7 @@ Input:  int x = "hello";
 Output:
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
+Error: Type error: Expected type Int, but got "hello" :: String
 ```
 
 ### Example 6: Runtime Error (division by zero)
