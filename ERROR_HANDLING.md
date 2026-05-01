@@ -275,7 +275,7 @@ Error: Division by zero
 ### Example 7: Runtime Error (undefined variable)
 
 ```
-Input:  x + 5
+Input:  x + 5;
 ```
 
 Output:
@@ -287,7 +287,7 @@ Error: Undefined identifier: x
 ### Example 8: Runtime Error (list index out of bounds)
 
 ```
-Input:  [1, 2, 3][10]
+Input:  [1, 2, 3][10];
 ```
 
 Output:
