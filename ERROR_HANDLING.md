@@ -89,7 +89,7 @@ These occur when the sequence of tokens does not follow the grammar rules of the
 #### Example
 
 ```
-Input:  Print(;
+Input:  sin(;
 ```
 
 #### Output
