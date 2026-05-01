@@ -263,7 +263,7 @@ Output:
 ### Example 6: Runtime Error (division by zero)
 
 ```
-Input:  10 / 0
+Input:  10 / 0;
 ```
 
 Output:
