@@ -74,11 +74,11 @@ Variable and function names consisting of letters, digits, and underscores, star
 
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `+` | Addition | `x + 1` |
-| `-` | Subtraction | `x - 1` |
-| `*` | Multiplication | `x * 2` |
-| `/` | Division | `x / 2` |
-| `%` | Modulo | `x % 3` |
+| `+` | Addition | `x + 1;` |
+| `-` | Subtraction | `x - 1;` |
+| `*` | Multiplication | `x * 2;` |
+| `/` | Division | `x / 2;` |
+| `%` | Modulo | `x % 3;` |
 
 ### Arithmetic Assignment Operators
 
@@ -98,12 +98,12 @@ Comparison operators always return a `bool`:
 
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `==` | Equal to | `x == 5` |
-| `!=` | Not equal to | `x != 0` |
-| `<` | Less than | `x < 10` |
-| `<=` | Less than or equal to | `x <= 10` |
-| `>` | Greater than | `x > 0` |
-| `>=` | Greater than or equal to | `x >= 0` |
+| `==` | Equal to | `x == 5;` |
+| `!=` | Not equal to | `x != 0;` |
+| `<` | Less than | `x < 10;` |
+| `<=` | Less than or equal to | `x <= 10;` |
+| `>` | Greater than | `x > 0;` |
+| `>=` | Greater than or equal to | `x >= 0;` |
 
 ### Logical Operators
 
@@ -111,9 +111,9 @@ Logical operators work on `bool` values. `&&` and `||` use **short-circuit evalu
 
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `&&` | Logical AND | `a && b` |
-| `\|\|` | Logical OR | `a \|\| b` |
-| `!` | Logical NOT | `!flag` |
+| `&&` | Logical AND | `a && b;` |
+| `\|\|` | Logical OR | `a \|\| b;` |
+| `!` | Logical NOT | `!flag;` |
 
 ### Bitwise Operators
 
@@ -121,11 +121,11 @@ Bitwise operators work on `int` values only:
 
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `&` | Bitwise AND | `x & 0xFF` |
-| `\|` | Bitwise OR | `x \| mask` |
-| `^` | Bitwise XOR | `x ^ y` |
-| `<<` | Left shift | `x << 2` |
-| `>>` | Right shift | `x >> 1` |
+| `&` | Bitwise AND | `x & 0xFF;` |
+| `\|` | Bitwise OR | `x \| mask;` |
+| `^` | Bitwise XOR | `x ^ y;` |
+| `<<` | Left shift | `x << 2;` |
+| `>>` | Right shift | `x >> 1;` |
 
 ### Bitwise Assignment Operators
 
@@ -213,7 +213,7 @@ x += 5;
 Variables can also be bound in an expression-scoped context using `let ... in`:
 
 ```
-let x = 5 in x + 1
+let x = 5 in x + 1;
 ```
 
 The variable `x` only exists within the `in` body and is not added to the surrounding environment.
@@ -239,13 +239,13 @@ if (x > 0) then { \
 The language supports list literals using square brackets:
 
 ```
-[1, 2, 3]
+[1, 2, 3];
 ```
 
 List ranges use `..` to generate a sequence:
 
 ```
-[1..5]
+[1..5];
 ```
 
 This produces `[1, 2, 3, 4, 5]`. Ranges also work in reverse — if the start is greater than the end, the list counts downward.
@@ -385,7 +385,7 @@ if (score >= 50) then { \
 ### Let Expression
 
 ```
-let x = 5 in x * 2
+let x = 5 in x * 2;
 ```
 
 ### Boolean Logic with Short-Circuit Evaluation
@@ -416,8 +416,8 @@ flags &= 0xFF;
 ### Lists
 
 ```
-[1, 2, 3, 4, 5]
-[1..10]
+[1, 2, 3, 4, 5];
+[1..10];
 ```
 
 ---

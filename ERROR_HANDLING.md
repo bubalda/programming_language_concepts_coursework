@@ -20,7 +20,7 @@ When an error occurs, the system reports:
 
 ```
 Line 3, Column 7:
-    Print(;
+    sin(;
           ^
 Error: Unexpected token ';'
 ```
@@ -89,14 +89,14 @@ These occur when the sequence of tokens does not follow the grammar rules of the
 #### Example
 
 ```
-Input:  Print(;
+Input:  sin(;
 ```
 
 #### Output
 
 ```
 Line 1, Column 7:
-    Print(;
+    sin(;
           ^
 Error: Unexpected token ';'
 ```
@@ -128,7 +128,7 @@ Input:  int x = "hello";
 #### Output
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
+Error: Type error: Expected type Int, but got "hello" :: String
 ```
 
 #### Behaviour
@@ -155,7 +155,7 @@ These occur during execution when an operation cannot be completed even though i
 #### Example
 
 ```
-Input:  10 / 0
+Input:  10 / 0;
 ```
 
 #### Output
@@ -257,13 +257,13 @@ Input:  int x = "hello";
 Output:
 
 ```
-<TYPE ERROR> -- Type error: Expected type Int, but got "hello" :: String
+Error: Type error: Expected type Int, but got "hello" :: String
 ```
 
 ### Example 6: Runtime Error (division by zero)
 
 ```
-Input:  10 / 0
+Input:  10 / 0;
 ```
 
 Output:
@@ -275,7 +275,7 @@ Error: Division by zero
 ### Example 7: Runtime Error (undefined variable)
 
 ```
-Input:  x + 5
+Input:  x + 5;
 ```
 
 Output:
@@ -287,7 +287,7 @@ Error: Undefined identifier: x
 ### Example 8: Runtime Error (list index out of bounds)
 
 ```
-Input:  [1, 2, 3][10]
+Input:  [1, 2, 3][10];
 ```
 
 Output:
