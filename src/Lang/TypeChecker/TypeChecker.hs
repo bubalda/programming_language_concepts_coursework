@@ -92,7 +92,7 @@ checkExpr env expr =
 
         ListIndex listExpr indexExpr -> do
             indexType <- checkExpr env indexExpr
-            unless (indexType == TInt) $
+            unless (indexType == TInt || indexType == TDynamic) $
                 Left (ExpectedTypeInt indexType indexExpr)
             
             listType <- checkExpr env listExpr
@@ -104,9 +104,9 @@ checkExpr env expr =
         ListRange e1 e2 -> do 
             t1 <- checkExpr env e1
             t2 <- checkExpr env e2
-            if t1 /= TInt
+            if not (t1 == TInt || t1 == TDynamic)
                 then Left (ExpectedTypeInt t1 e1)
-            else if t2 /= TInt 
+            else if not (t2 == TInt || t2 == TDynamic)
                 then Left (ExpectedTypeInt t2 e2)
             else 
                 Right (TList TInt)
@@ -125,7 +125,7 @@ checkExpr env expr =
                         Nothing -> Right ()
                         Just ex -> do
                              t <- checkExpr env ex 
-                             if t == TInt 
+                             if t == TInt || t == TDynamic
                                 then Right ()
                                 else Left (ExpectedTypeInt t ex)
             
@@ -172,6 +172,7 @@ checkExpr env expr =
                     let checkNumericList =
                             case (args, argType) of
                                 ([_], [TList t]) | isNumeric t -> Right ()
+                                ([_], [TDynamic]) -> Right ()
                                 ([arg], [TList t]) -> Left (ExpectedNumeric t arg)
                                 ([arg], [t])       -> Left (ExpectedList t arg)
                                 _                  -> Left (ArgsMismatch funcName 1 actualArg)
@@ -209,6 +210,7 @@ checkExpr env expr =
                         FLength -> case (args, argType) of
                             (_, [TList _]) -> Right ()
                             (_, [TString]) -> Right ()
+                            (_, [TDynamic]) -> Right ()
                             ([arg], [t])   -> Left (ExpectedList t arg)
                             _              -> Left (ArgsMismatch funcName 1 actualArg)
                     
