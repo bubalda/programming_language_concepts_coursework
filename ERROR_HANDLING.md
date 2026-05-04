@@ -236,14 +236,14 @@ Error: Unclosed block comments detected, did you close it using '*/'?
 ### Example 4: Syntax Error
 
 ```
-Input:  Print(;
+Input:  sin(;
 ```
 
 Output:
 
 ```
 Line 1, Column 7:
-    Print(;
+    sin(;
           ^
 Error: Unexpected token ';'
 ```
